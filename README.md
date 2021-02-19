@@ -14,9 +14,13 @@
 
 # 5. - 6. hét - Szenzorok szimulációja Gazeboban
 
-## Hova fogunk eljutni?
+# Hova fogunk eljutni?
 
 <a href="https://youtu.be/xxx"><img height="400" src="./assets/youtube.png"></a>
+
+# Kezdőcsomag
+
+
 
 # Kamera
 
@@ -25,8 +29,10 @@
 # IMU
 http://wiki.ros.org/hector_gazebo_plugins
 
-# Velodyne lidar
+# Velodyne VLP16 lidar
 https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/
 
 # RGBD kamera
 
+# GPS
+Waypoint követés
