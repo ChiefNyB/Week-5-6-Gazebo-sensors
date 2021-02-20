@@ -120,7 +120,7 @@
     </plugin>
   </gazebo>
 
-  <!-- Velodyne -->
+  <!-- Velodyne >
   <gazebo reference="velodyne_link">
     <sensor type="ray" name="VLP16">
       <pose>0 0 0 0 0 0</pose>
@@ -129,7 +129,7 @@
       <ray>
         <scan>
           <horizontal>
-            <samples>360</samples>
+            <samples>1875</samples>
             <resolution>1</resolution>
             <min_angle>-3.14156</min_angle>
             <max_angle>3.14156</max_angle>
@@ -142,8 +142,8 @@
           </vertical>
         </scan>
         <range>
-          <min>1.0</min>
-          <max>140.0</max>
+          <min>0.3</min>
+          <max>130.0</max>
           <resolution>0.001</resolution>
         </range>
         <noise>
@@ -155,11 +155,27 @@
       <plugin name="gazebo_ros_laser_controller" filename="libgazebo_ros_velodyne_laser.so">
         <topicName>velodyne_points</topicName>
         <frameName>velodyne_link</frameName>
-        <min_range>1.0</min_range>
-        <max_range>140.0</max_range>
+        <min_range>0.9</min_range>
+        <max_range>130.0</max_range>
         <gaussianNoise>0.008</gaussianNoise>
       </plugin>
     </sensor>
+  </gazebo-->
+
+  <gazebo>
+    <plugin name="gps_controller" filename="libhector_gazebo_ros_gps.so">
+      <robotNamespace>/</robotNamespace>
+      <updateRate>40</updateRate>
+      <bodyName>base_link</bodyName>
+      <frameId>base_link</frameId>
+      <topicName>navsat/fix</topicName>
+      <velocityTopicName>navsat/vel</velocityTopicName>
+      <referenceLatitude>47.479049</referenceLatitude>
+      <referenceLongitude>19.057787</referenceLongitude>
+      <referenceHeading>0</referenceHeading>
+      <referenceAltitude>0</referenceAltitude>
+      <drift>0.0001 0.0001 0.0001</drift>
+    </plugin>
   </gazebo>
 
 </robot>
