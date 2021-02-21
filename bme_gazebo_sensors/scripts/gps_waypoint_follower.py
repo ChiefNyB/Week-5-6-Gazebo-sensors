@@ -56,25 +56,38 @@ rate = rospy.Rate(10)
 rospy.loginfo("GPS waypoint follower node has started!")
 
 # Example next waypoint [latitude, longitude]
-next_waypoint = [47.47908802923231, 19.057747190129973]
+waypoints = [[47.47908802923231, 19.05774719012997],
+             [47.47905809688768, 19.05774697410133],
+             [47.47907097650916, 19.05779319890401],
+             [47.47907258024465, 19.05782379884820]]
 
 cmd_vel = Twist()
 cmd_vel.linear.x = 0
 cmd_vel.angular.z = 0
 
+waypointIndex = 0
 while not rospy.is_shutdown():
-    distance, bearing = haversine(latitude, longitude, next_waypoint[0], next_waypoint[1])
-    rospy.loginfo("Distance: %.3f m, heading error: %.3f rad." % (distance, bearing - yaw))
+    distance, bearing = haversine(latitude, longitude, waypoints[waypointIndex][0], waypoints[waypointIndex][1])
+
+    # calculate heading error from yaw and bearing
+    headingError = bearing - yaw
+    if headingError > math.pi:
+        headingError = headingError - (2 * math.pi) 
+    if headingError < -math.pi:
+        headingError = headingError + (2 * math.pi)
+
+    rospy.loginfo("Distance: %.3f m, heading error: %.3f rad." % (distance, headingError))
+    #rospy.loginfo("Bearing: %.3f rad, yaw: %.3f rad, error: %.3f rad" % (bearing, yaw, headingError))
 
     # Heading error, threshold is 0.1 rad
-    if abs(bearing - yaw) > 0.1:
+    if abs(headingError) > 0.1:
         # Only rotate in place if there is any heading error
         cmd_vel.linear.x = 0
 
-        if bearing < yaw:
-            cmd_vel.angular.z = -0.4
+        if headingError < 0:
+            cmd_vel.angular.z = -0.3
         else:
-            cmd_vel.angular.z = 0.4
+            cmd_vel.angular.z = 0.3
     else:
         # Only straight driving, no curves
         cmd_vel.angular.z = 0
@@ -84,8 +97,13 @@ while not rospy.is_shutdown():
         else:
             cmd_vel.linear.x = 0
             rospy.loginfo("Target waypoint reached!")
+            waypointIndex += 1
 
     pub.publish(cmd_vel)
-    rate.sleep()
 
-    
+    if waypointIndex == len(waypoints):
+        rospy.loginfo("Last target waypoint reached!")
+        break
+    else:
+        rate.sleep()
+
