@@ -23,7 +23,14 @@ A lecke kezdőcsomagja épít a Week-3-4-Gazebo-basics anyagára, de egy külön
 
 A kiindulási projekt tartalmazza a Gazebo világ szimulációját, az alap differenciálhajtású MOGI robotunk modelljét és szimulációját, valamint az alap launchfájlokat és RViz fájlokat.
 
-# Kamera
+ToDo Github clone
+git clone -b starter-branch https://github.com/MOGI-ROS/Week-5-6-Gazebo-sensors.git
+
+## A `tree` parancs
+tree -L 2
+
+# Szenzorok 1.
+## Kamera
 A kamera hozzáadása két lépésben történik, először adjuk hozzá a kamerát a robotunk URDF fájljához.
 A kamera egy új link lesz `camera_link` néven, ami fixed jointtal csatlakozik a robot alvázához. Az egyszerűség kedvéért, legyen a kameránk egy kis piros kocka.
 
@@ -89,6 +96,7 @@ Nézzük meg a kameránk helyét a `check_urdf.launch` fájlunk segítségével:
 ```console
 roslaunch bme_gazebo_sensors check_urdf.launch
 ```
+![alt text][image1]
 
 Ha elégedettek vagyunk a kamera helyzetével, hozzuk létre a Gazebo plugint, ami a kameránk szimulációját csinálja:
 ```xml
@@ -139,7 +147,13 @@ Ha elégedettek vagyunk a kamera helyzetével, hozzuk létre a Gazebo plugint, a
 roslaunch bme_gazebo_sensors spawn_robot.launch
 ```
 
-# IMU
+![alt text][image2]
+
+![alt text][image3]
+
+![alt text][image4]
+
+## IMU
 http://wiki.ros.org/hector_gazebo_plugins
 
 ```xml
@@ -172,7 +186,11 @@ http://wiki.ros.org/hector_gazebo_plugins
   </gazebo>
 ```
 
-# GPS
+http://docs.ros.org/en/melodic/api/rviz_plugin_tutorials/html/display_plugin_tutorial.html
+
+http://wiki.ros.org/rviz_imu_plugin
+
+## GPS
 
 ```xml
   <gazebo>
@@ -193,19 +211,22 @@ http://wiki.ros.org/hector_gazebo_plugins
 ```
 
 
-Waypoint követés
+# Waypoint követés
 https://en.wikipedia.org/wiki/Haversine_formula
 
+Odometria vs IMU
 
-# Lidar
+
+# Szenzorok 2
+## Lidar
 
 
-# Velodyne VLP16 lidar
+## Velodyne VLP16 lidar
 https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/
 
 Paramterek:
 https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/velodyne_description/urdf/VLP-16.urdf.xacro
 
-# RGBD kamera
+## RGBD kamera
 
-# cv bridge OpenCV
+# cv bridge és OpenCV
