@@ -200,7 +200,7 @@
   </link>
 
   <!-- Lidar -->
-  <joint type="fixed" name="scan_joint">
+  <!--joint type="fixed" name="scan_joint">
     <origin xyz="0.0 0 0.15" rpy="0 0 0"/>
     <child link="scan_link"/>
     <parent link="base_link"/>
@@ -232,7 +232,7 @@
       </geometry>
     </visual>
 
-  </link>
+  </link-->
 
   <!-- IMU -->
   <joint name="imu_joint" type="fixed">
@@ -245,8 +245,8 @@
   </link>
 
   <!-- Velodyne -->
-  <joint type="fixed" name="velodyne_joint">
-    <origin xyz="0.0 0 0.15" rpy="0 0 0"/>
+  <!--joint type="fixed" name="velodyne_joint">
+    <origin xyz="0.0 0 0.10" rpy="0 0 0"/>
     <child link="velodyne_link"/>
     <parent link="base_link"/>
     <axis xyz="0 1 0" rpy="0 0 0"/>
@@ -277,6 +277,6 @@
       </geometry>
     </visual>
 
-  </link>
+  </link-->
 
 </robot>
