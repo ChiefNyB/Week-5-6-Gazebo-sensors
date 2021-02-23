@@ -4,13 +4,12 @@
 [image2]: ./assets/mogi_bot_camera_2.png "Camera"
 [image3]: ./assets/mogi_bot_camera_3.png "Camera"
 [image4]: ./assets/mogi_bot_camera_4.png "Camera"
-[image5]: ./assets/mogi_bot_lidar_1.png "Lidar"
-[image6]: ./assets/mogi_bot_lidar_2.png "Lidar"
-[image7]: ./assets/mogi_bot_lidar_3.png "Lidar"
-[image8]: ./assets/mogi_bot_lidar_4.png "Lidar"
-[image9]: ./assets/velodyne_1.png "Velodyne" 
-[image10]: ./assets/velodyne_2.png "Velodyne" 
-
+[image5]: ./assets/mogi_bot_imu_1.png "IMU"
+[image6]: ./assets/mogi_bot_imu_2.png "IMU"
+[image7]: ./assets/mogi_bot_imu_3.png "IMU"
+[image8]: ./assets/mogi_bot_camera_5.png "Camera" 
+[image9]: ./assets/mogi_bot_camera_6.png "Camera" 
+[image10]: ./assets/mogi_bot_camera_7.png "Camera" 
 
 # 5. - 6. hét - Szenzorok szimulációja Gazeboban
 
@@ -18,18 +17,54 @@
 
 <a href="https://youtu.be/xxx"><img height="400" src="./assets/youtube.png"></a>
 
+# Tartalomjegyzék
+1. [Kezdőcsomag](#Kezdőcsomag)
+2. [A `tree` parancs](#A-`tree`-parancs)
+3. [Szenzorok 1](#Szenzorok-1)
+4. [Waypoint követés](#Waypoint-követés)
+5. [Szenzorok 2](#Szenzorok-2)
+6. [OpenCV](#OpenCV)
+
 # Kezdőcsomag
 A lecke kezdőcsomagja épít a Week-3-4-Gazebo-basics anyagára, de egy külön GIT repositoryból dolgozunk, így nem feltétele az előző `bme_gazebo_basics` csomag megléte.
 
 A kiindulási projekt tartalmazza a Gazebo világ szimulációját, az alap differenciálhajtású MOGI robotunk modelljét és szimulációját, valamint az alap launchfájlokat és RViz fájlokat.
 
-ToDo Github clone
+A kezdőprojekt letöltése:
+```console
 git clone -b starter-branch https://github.com/MOGI-ROS/Week-5-6-Gazebo-sensors.git
+```
 
 ## A `tree` parancs
-tree -L 2
+A kezdőprojekt tartalma a következő:
+```console
+david@DavidsLenovoX1:~/bme_catkin_ws/src/Week-5-6-Gazebo-sensors/bme_gazebo_sensors$ tree
+.
+├── CMakeLists.txt
+├── launch
+│   ├── check_urdf.launch
+│   ├── spawn_robot.launch
+│   ├── teleop.launch
+│   └── world.launch
+├── meshes
+│   ├── lidar.dae
+│   ├── mogi_bot.dae
+│   ├── vlp16.dae
+│   └── wheel.dae
+├── package.xml
+├── rviz
+│   ├── check_urdf.rviz
+│   └── mogi_world.rviz
+├── urdf
+│   ├── materials.xacro
+│   ├── mogi_bot.gazebo
+│   └── mogi_bot.xacro
+└── worlds
+    └── world_modified.world
+```
+A mappák tartalma egyszerűen listázható így a `tree` paranccsal, ha csak bizonyos mélységig szeretnétek listázni, akkor megtehetitek a `-L` kapcsoló segítségével. Példul `tree -L 2`.
 
-# Szenzorok 1.
+# Szenzorok 1
 ## Kamera
 A kamera hozzáadása két lépésben történik, először adjuk hozzá a kamerát a robotunk URDF fájljához.
 A kamera egy új link lesz `camera_link` néven, ami fixed jointtal csatlakozik a robot alvázához. Az egyszerűség kedvéért, legyen a kameránk egy kis piros kocka.
@@ -76,11 +111,11 @@ A kamera egy új link lesz `camera_link` néven, ami fixed jointtal csatlakozik 
   </gazebo>
 ```
 
-A kameránkat használhatjuk ROS esetén a transzformáció megadása nélkül is, azonban ez a gyakorlatban nem praktikus, mert az RViz képes a megjelenített adatokat a transzformációnak megfelelően overlay-elni a kamera képére. Ez csak akkor működik, ha a kameránk transzformációját helyesen adjuk meg az URDF fájlban.
+A kamerákat használhatunk ROS esetén a transzformációk megadása nélkül is, azonban ez a gyakorlatban nem praktikus, mert az RViz képes a megjelenített adatokat a transzformációknak megfelelően overlay-elni a kamera képére. Ez csak akkor működik, ha a kameránk transzformációját megadtuk (és helyesen adtuk meg) az URDF fájlban.
 
 A Gazebo és az RViz kamera transzformációja között azonban van némi ellentmondás, és ha csak a fenti sorok szerepelnek az URDF-ben helytelen lesz a kamera képére vetített overlay.
 
-Ezt egy újabb link, a `camera_link_optical` segítségével tudjuk megoldani, ahol meg tudjuk oldani a további szükséges transzformációkat.
+Ezt egy újabb link, a `camera_link_optical` segítségével tudjuk orvosolni, ahol meg tudjuk oldani a további szükséges transzformációkat.
 ```xml
   <joint type="fixed" name="camera_optical_joint">
     <origin xyz="0 0 0" rpy="-1.5707 0 -1.5707"/>
@@ -98,7 +133,12 @@ roslaunch bme_gazebo_sensors check_urdf.launch
 ```
 ![alt text][image1]
 
-Ha elégedettek vagyunk a kamera helyzetével, hozzuk létre a Gazebo plugint, ami a kameránk szimulációját csinálja:
+A kameránk helyét ezzel a sorral tudjuk módosítani:
+```xml
+<origin xyz="0.225 0 0.075" rpy="0 0 0"/>
+```
+
+Ha elégedettek vagyunk a kamera helyzetével, hozzuk létre a Gazebo plugint is, ami a kameránk szimulációját csinálja:
 ```xml
   <!-- Camera -->
   <gazebo reference="camera_link">
@@ -143,6 +183,8 @@ Ha elégedettek vagyunk a kamera helyzetével, hozzuk létre a Gazebo plugint, a
   </gazebo>
 ```
 
+Indítsuk is el a kamerával felszerelt robotunk szimulációját:
+
 ```console
 roslaunch bme_gazebo_sensors spawn_robot.launch
 ```
@@ -151,10 +193,42 @@ roslaunch bme_gazebo_sensors spawn_robot.launch
 
 ![alt text][image3]
 
+A kamera képére ráközelítve láthatjátok az overlayt. Ez a későbbiekben, ahol több szenzort is adunk majd a robotunkhoz hasznosabb és látványosabb lesz.
+
 ![alt text][image4]
 
+ToDo: paraméterek
+
+Gazebo supports simulation of camera based on the Brown's distortion model. It expects 5 distortion coefficients k1, k2, k3, p1, p2 that you can get from the camera calibration tools. The k coefficients are the radial components of the distortion model, while the p coefficients are the tangential components.
+http://gazebosim.org/tutorials?tut=camera_distortion&cat=sensors
+
+<visualize>true</visualize>
+
+![alt text][image8]
+![alt text][image9]
+
+Nézzük meg a kamera által küldött topicokat rqt-ben is:
+![alt text][image10]
+
+A kamera 
+http://wiki.ros.org/image_transport
+
+De van plugin:
+http://wiki.ros.org/compressed_image_transport
+http://wiki.ros.org/theora_image_transport
+
 ## IMU
-http://wiki.ros.org/hector_gazebo_plugins
+
+ToDo: mi a az IMU
+
+IMU szimulációra több Gazebo plugin is létezik, én az alábbi Hector IMU controllert használom itt, ami a [Darmstadt-i egyetem](https://www.teamhector.de/) fejlesztése, és itt találjátok a ROS Wiki-n: http://wiki.ros.org/hector_gazebo_plugins.
+
+A Linux csomagkezelőjével egyszerűen fel tudjátok tenni:
+```console
+sudo apt install ros-melodic-hector-gazebo-plugins
+```
+
+Az IMU-hoz is csinálunk egy új linket és jointot, de ebben az esetben nem lesz semmi megjelenése, egyszerűen a robot alvázának origójához van fixen rögzítve.
 
 ```xml
   <!-- IMU -->
@@ -167,6 +241,8 @@ http://wiki.ros.org/hector_gazebo_plugins
   <link name="imu_link">
   </link>
 ```
+
+A Gazebo plugin pedig a következő:
 
 ```xml
   <!-- IMU -->
@@ -186,11 +262,32 @@ http://wiki.ros.org/hector_gazebo_plugins
   </gazebo>
 ```
 
+ToDo: paraméterek.
+
+Nézzük meg ezúttal is a szimulációt az IMU-val:
+```console
+roslaunch bme_gazebo_sensors spawn_robot.launch
+```
+![alt text][image5]
+
+Az IMU jelének megjelenítése egy csúnya nagy lila nyíl, aminek a scale-je nem is állítható. Ennek az az oka, hogy ez az egyik RViz plugin tutorial anyaga:  
 http://docs.ros.org/en/melodic/api/rviz_plugin_tutorials/html/display_plugin_tutorial.html
 
-http://wiki.ros.org/rviz_imu_plugin
+Ennél egy kicsit szebb megjelenítő az RViz IMU Plugin, aminek ez a ROS wiki oldala: http://wiki.ros.org/rviz_imu_plugin.
+
+A Linux csomagkezelőjével egyszerűen fel tudjátok tenni:
+```console
+sudo apt install ros-melodic-rviz-imu-plugin
+```
+
+Ez egy jobban értelmezhető tengely jelölőt tesz a robotra az IMU jele alapján.
+![alt text][image6]
+
+A működését bármikor gyorsan ellenőrízhetitek, ha a Gazeboban egy kicsit megforgatjátok a robotot.
+![alt text][image7]
 
 ## GPS
+
 
 ```xml
   <gazebo>
