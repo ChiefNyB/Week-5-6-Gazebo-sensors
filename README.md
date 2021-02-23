@@ -197,25 +197,40 @@ A kamera képére ráközelítve láthatjátok az overlayt. Ez a későbbiekben,
 
 ![alt text][image4]
 
-ToDo: paraméterek
-
-Gazebo supports simulation of camera based on the Brown's distortion model. It expects 5 distortion coefficients k1, k2, k3, p1, p2 that you can get from the camera calibration tools. The k coefficients are the radial components of the distortion model, while the p coefficients are the tangential components.
-http://gazebosim.org/tutorials?tut=camera_distortion&cat=sensors
-
+A paraméter között természetesen tudjuk állítani a kamera felbontását és képfrissítési frekvenciáját, de ezeken felül van még néhány izgalmas paraméter is. Ilyen például a:
+```xml
 <visualize>true</visualize>
+```
+Ennek segítségével bekapcsolhatjuk a Gazeboban, hogy megjelenítse a szenzorunk által érzékelt adatokat. Ezt a későbbiekben több másik szenzoron is kipróbáljuk majd.
 
-![alt text][image8]
+
+A látószöget a következő paraméter segítségével állíthatjuk:
+```xml
+<horizontal_fov>1.3962634</horizontal_fov>
+```
+A fenti képen egy szűkebb a lentin egy tágabb látószögű kamera képét látjátok.
 ![alt text][image9]
+![alt text][image8]
 
-Nézzük meg a kamera által küldött topicokat rqt-ben is:
+Ezen felül a Gazeboval lehetséges a [Brown-Conrady féle lencsetorzítás modell](https://en.wikipedia.org/wiki/Distortion_(optics)) használata is. Ezeket a valós kameránk kalibrációjából tudjuk meghatározni. Részletes információ [itt](http://gazebosim.org/tutorials?tut=camera_distortion&cat=sensors) érhető el.
+
+Az RViz után nézzük meg a kamera által küldött topicokat rqt-ben is:
 ![alt text][image10]
 
-A kamera 
-http://wiki.ros.org/image_transport
+A szimulált kamera alapértelmezetten a `/head_camera/image_raw` topicban küldi a kamera streamet. Ezt a plugin beállításainál a következő paraméterekkel adtuk meg:
+```xml
+<cameraName>head_camera</cameraName>
+<imageTopicName>image_raw</imageTopicName>
+```
 
-De van plugin:
-http://wiki.ros.org/compressed_image_transport
-http://wiki.ros.org/theora_image_transport
+ROS esetén a kamera alapértelmezetten az [image transport](http://wiki.ros.org/image_transport) csomag segjtségével küldi a tömörítetlen streamet. Ez ennek megfelelően nagy sávszélességet is igényel. Ez egy mobil robot esetén ahol 1 vagy több kamera képét egy másik hálózati gépen is szeretnénk elérni nem elfogadható terhelés a hálózaton.
+
+A megoldás a kamera stream tömörítése, ROS esetén szerencsére ehhez sem kell saját alkalmazást fejleszteni, ugyanis az image transport csomag kezel plugineket. ROS esetén a két legelterjedtebb plugin a [compressed image transport](http://wiki.ros.org/compressed_image_transport) valamint a [theora image transport](http://wiki.ros.org/theora_image_transport).
+
+Ezeket a csomagokat csak egyszerűen telepítenünk kell és automatikusan megjelennek a tömörített képet tartalmazó topicok.
+A compressed image transport konfigurálható jpg vagy png tömörítéssel, valamint a tömörítés mértékével.
+
+De még ennél is szignifikánsan kisebb streamet eredményez a [theora tömörítés](https://en.wikipedia.org/wiki/Theora), ami egy teljesen nyílt forrású és ingyenes videótömörítési eljárás.
 
 ## IMU
 
