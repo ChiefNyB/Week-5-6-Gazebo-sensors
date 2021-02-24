@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import math
 import rospy
 from nav_msgs.msg import Odometry
@@ -47,7 +48,7 @@ roll, pitch, yaw = 0, 0, 0
 rospy.init_node('gps_waypoint_follower')
 
 #sub_odom = rospy.Subscriber ('/odom', Odometry, get_rotation)
-sub_odom = rospy.Subscriber ('/imu/data', Imu, get_imu_rotation)
+sub_imu = rospy.Subscriber ('/imu/data', Imu, get_imu_rotation)
 sub_gps = rospy.Subscriber ('/navsat/fix', NavSatFix, get_gps_coordinates)
 pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 
@@ -55,7 +56,7 @@ rate = rospy.Rate(10)
 
 rospy.loginfo("GPS waypoint follower node has started!")
 
-# Example next waypoint [latitude, longitude]
+# Example waypoints [latitude, longitude]
 waypoints = [[47.47908802923231, 19.05774719012997],
              [47.47905809688768, 19.05774697410133],
              [47.47907097650916, 19.05779319890401],
