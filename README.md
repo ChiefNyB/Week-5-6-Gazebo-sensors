@@ -33,7 +33,8 @@
 
 # Hova fogunk eljutni?
 
-<a href="https://youtu.be/xxx"><img height="400" src="./assets/youtube.png"></a>
+<a href="https://youtu.be/8bnjzPTNLfc"><img height="400" src="./assets/youtube1.png"></a>
+<a href="https://youtu.be/-YCcQZmKJtY"><img height="400" src="./assets/youtube2.png"></a>
 
 # Tartalomjegyzék
 1. [Kezdőcsomag](#Kezdőcsomag)
