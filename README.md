@@ -12,6 +12,11 @@
 [image10]: ./assets/mogi_bot_camera_7.png "Camera" 
 [image11]: ./assets/mogi_bot_camera_8.png "Camera" 
 [image12]: ./assets/mogi_bot_camera_9.png "Camera" 
+[image13]: ./assets/mogi_bot_gps_1.png "GPS"
+[image14]: ./assets/mogi_bot_gps_2.png "GPS"
+[image15]: ./assets/mogi_bot_gps_3.png "GPS"
+[image16]: ./assets/mogi_bot_gps_4.png "GPS"
+[image17]: ./assets/mogi_bot_gps_5.png "GPS"
 
 # 5. - 6. hét - Szenzorok szimulációja Gazeboban
 
@@ -312,16 +317,19 @@ A Gazebo camera pluginjével ezen kívül akár nagy látószögű kamerát is s
 
 ## IMU
 
-ToDo: mi a az IMU
+Az IMU az `Inertial Measurement Unit` rövidítése, és minimum egy 3 tengelyes MEMS gyorsulásmérőt és egy 3 tengelyes MEMS giroszkópot értünk alatta. Sokszor ez kiegészül egy 3 tengelyes magnetométerrel és akár egy barométerrel is. Az IMU nem helyettesíti egy robot egyéb szenzorait (pl. odometria), viszont szenzorfúzió segítségével pontosíthatja a többi szenzor adatát.
 
 IMU szimulációra több Gazebo plugin is létezik, én az alábbi Hector IMU controllert használom itt, ami a [Darmstadt-i egyetem](https://www.teamhector.de/) fejlesztése, és itt találjátok a ROS Wiki-n: http://wiki.ros.org/hector_gazebo_plugins.
 
-A Linux csomagkezelőjével egyszerűen fel tudjátok tenni:
+A Linux csomagkezelőjével egyszerűen fel tudjátok tenni a Hector Gazebo pluginjeit:
 ```console
 sudo apt install ros-melodic-hector-gazebo-plugins
 ```
 
-Az IMU-hoz is csinálunk egy új linket és jointot, de ebben az esetben nem lesz semmi megjelenése, egyszerűen a robot alvázának origójához van fixen rögzítve.
+Plusz olvasmánynak, egyéb IMU pluginekről és az összehasonlításukról szól ez a [diplomamunka](https://dspace.cvut.cz/bitstream/handle/10467/83404/F3-DP-2019-Cesenek-David-master_thesis_imu_modeling_cesenek_final-merged.pdf?sequence=-1&isAllowed=y) a prágai műszaki egyetmről.
+
+### URDF
+Az IMU-hoz is csinálunk egy új linket és jointot az URDF-ben, de ebben az esetben nem lesz sem piros kocka, se más megjelenése, egyszerűen a robot alvázának origójához van fixen rögzítve.
 
 ```xml
   <!-- IMU -->
@@ -335,7 +343,8 @@ Az IMU-hoz is csinálunk egy új linket és jointot, de ebben az esetben nem les
   </link>
 ```
 
-A Gazebo plugin pedig a következő:
+### Gazebo plugin
+A Gazebo plugin használata pedig a következő:
 
 ```xml
   <!-- IMU -->
@@ -355,7 +364,7 @@ A Gazebo plugin pedig a következő:
   </gazebo>
 ```
 
-ToDo: paraméterek.
+A topic név és a frekvencia mellett megadható a szimulált szenzorok zaj modellje is, ahol a nagyfrekvenciás zajmodell mellett a hosszútávú drift is megadható.
 
 Nézzük meg ezúttal is a szimulációt az IMU-val:
 ```console
@@ -363,6 +372,7 @@ roslaunch bme_gazebo_sensors spawn_robot.launch
 ```
 ![alt text][image5]
 
+### RViz
 Az IMU jelének megjelenítése egy csúnya nagy lila nyíl, aminek a scale-je nem is állítható. Ennek az az oka, hogy ez az egyik RViz plugin tutorial anyaga:  
 http://docs.ros.org/en/melodic/api/rviz_plugin_tutorials/html/display_plugin_tutorial.html
 
@@ -376,11 +386,11 @@ sudo apt install ros-melodic-rviz-imu-plugin
 Ez egy jobban értelmezhető tengely jelölőt tesz a robotra az IMU jele alapján.
 ![alt text][image6]
 
-A működését bármikor gyorsan ellenőrízhetitek, ha a Gazeboban egy kicsit megforgatjátok a robotot.
+A működését bármikor gyorsan ellenőrízhetjük, ha a Gazeboban egy kicsit megforgatjátok a robotot.
 ![alt text][image7]
 
 ## GPS
-
+A GPS szenzorunk szimulációjához szintén a Hector pluginjét használjuk, ezúttal nem szükséges kiegészítenünk az URDF fájlunkat, elegendő hozzáadni a Gazebo plugint, ami referenciaként a robot alvázára hivatkozik.
 
 ```xml
   <gazebo>
@@ -400,12 +410,195 @@ A működését bármikor gyorsan ellenőrízhetitek, ha a Gazeboban egy kicsit 
   </gazebo>
 ```
 
+A paraméterekről részletes leírást a [ROS wiki](http://wiki.ros.org/hector_gazebo_plugins#GazeboRosGps)-n olvashattok. A referencia szélességi és hosszúsági fokot a BME D épületére állítottam be.
 
 # Waypoint követés
-https://en.wikipedia.org/wiki/Haversine_formula
+Készítsünk egy saját node-ot, ami képes GPS koordináták alapján vezetni a szimulált robotunkat!
+Azt már a korábbi fejezetekből tudjuk, hogy a robot mozgatásához Twist típusú üzenetet kell küldenünk a `cmd_vel` topicba, de nézzük meg milyen topicokra kell feliratkoznunk!
 
-Odometria vs IMU
+![alt text][image13]
 
+A robotunk abszolút pozícióját a `navsat/fix` topicban találjuk, ez egy `NavSatFix` típusú üzenet a `sensor_msgs` csomagból, tehát az alap ROS telepítés része. Ezen belül látjuk a latitude és longitude változókat.
+
+A cél GPS koordinátához képest tehát már meg tudjuk határozni a távolságunkat sőt az irányt, a két GPS koordináta közötti szög különbséget (**bearing**) is, azonban nem tudjuk még, hogy ehhez képest milyen irányban áll a robotunk (**heading** vagy **yaw**). Ehhez szükségünk van a robotunk abszolút orientációjára a `/odom` topicból, ami pedig egy `Odometry` típusú üzenet a `nav_msgs` csomagból, tehát szintén az alap ROS telepítés része!
+
+A ROS a robot orientációját quaternionokban adja meg, mi azonban az egyszerűség kedvéért ezt Euler szögekre konvertáljuk.
+
+## Python script
+Készítsük el tehát a `gps_waypoint_follower.py` scriptet, ami ezen a 4 GPS koordinátán vezeti keresztül a robotot, majd megáll:
+```python
+# Example waypoints [latitude, longitude]
+waypoints = [[47.47908802923231, 19.05774719012997],
+             [47.47905809688768, 19.05774697410133],
+             [47.47907097650916, 19.05779319890401],
+             [47.47907258024465, 19.05782379884820]]
+```
+
+A `gps_waypoint_follower.py` tartalma:
+```python
+#!/usr/bin/env python
+
+import math
+import rospy
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import NavSatFix
+from sensor_msgs.msg import Imu
+from geometry_msgs.msg import Twist
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
+
+def get_rotation (msg):
+    global roll, pitch, yaw
+    orientation_q = msg.pose.pose.orientation
+    orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+    (roll, pitch, yaw) = euler_from_quaternion (orientation_list)
+
+def get_gps_coordinates(msg):
+    global latitude, longitude
+    latitude = msg.latitude
+    longitude = msg.longitude
+    #print(msg.latitude, msg.longitude)
+
+def haversine(lat1, lon1, lat2, lon2):
+    # Calculate distance
+    R = 6378.137 # Radius of earth in km
+    dLat = lat2 * math.pi / 180 - lat1 * math.pi / 180
+    dLon = lon2 * math.pi / 180 - lon1 * math.pi / 180
+    a = math.sin(dLat/2) * math.sin(dLat/2) + math.cos(lat1 * math.pi / 180) * math.cos(lat2 * math.pi / 180) * math.sin(dLon/2) * math.sin(dLon/2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    d = R * c * 1000 # in meters
+
+    # Calculate heading
+    y = math.sin(dLon) * math.cos(dLon)
+    x = math.cos(lat1 * math.pi / 180) * math.sin(lat2 * math.pi / 180) - math.sin(lat1 * math.pi / 180) * math.cos(lat2 * math.pi / 180) * math.cos(dLon)
+    bearing = -math.atan2(y,x)
+
+    return d, bearing
+
+latitude, longitude = 0, 0
+roll, pitch, yaw = 0, 0, 0
+
+rospy.init_node('gps_waypoint_follower')
+
+sub_odom = rospy.Subscriber ('/odom', Odometry, get_rotation)
+sub_gps = rospy.Subscriber ('/navsat/fix', NavSatFix, get_gps_coordinates)
+pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
+
+rate = rospy.Rate(10)
+
+rospy.loginfo("GPS waypoint follower node has started!")
+
+# Example waypoints [latitude, longitude]
+waypoints = [[47.47908802923231, 19.05774719012997],
+             [47.47905809688768, 19.05774697410133],
+             [47.47907097650916, 19.05779319890401],
+             [47.47907258024465, 19.05782379884820]]
+
+cmd_vel = Twist()
+cmd_vel.linear.x = 0
+cmd_vel.angular.z = 0
+
+waypointIndex = 0
+while not rospy.is_shutdown():
+    distance, bearing = haversine(latitude, longitude, waypoints[waypointIndex][0], waypoints[waypointIndex][1])
+
+    # calculate heading error from yaw and bearing
+    headingError = bearing - yaw
+
+    rospy.loginfo("Distance: %.3f m, heading error: %.3f rad." % (distance, headingError))
+    #rospy.loginfo("Bearing: %.3f rad, yaw: %.3f rad, error: %.3f rad" % (bearing, yaw, headingError))
+
+    # Heading error, threshold is 0.1 rad
+    if abs(headingError) > 0.1:
+        # Only rotate in place if there is any heading error
+        cmd_vel.linear.x = 0
+
+        if headingError < 0:
+            cmd_vel.angular.z = -0.3
+        else:
+            cmd_vel.angular.z = 0.3
+    else:
+        # Only straight driving, no curves
+        cmd_vel.angular.z = 0
+        # Distance error, threshold is 0.2m
+        if distance > 0.2:
+            cmd_vel.linear.x = 0.5
+        else:
+            cmd_vel.linear.x = 0
+            rospy.loginfo("Target waypoint reached!")
+            waypointIndex += 1
+
+    pub.publish(cmd_vel)
+
+    if waypointIndex == len(waypoints):
+        rospy.loginfo("Last target waypoint reached!")
+        break
+    else:
+        rate.sleep()
+```
+
+## Haversine formula
+Mivel a GPS kooridináták nem egy sík felület X, Y koordináta párjai, ezért szükségünk van egy speciális formulára, ami a szélességi és hosszúsági fokok alapján meghatározza a távolságot és az irányt a gömb felszínén. Erre a fenti kódban a [Haversine formulát](https://en.wikipedia.org/wiki/Haversine_formula) használjuk.
+
+Indítsuk el a szimulációt, majd egy másik terminálban futtassuk az új node-unkat:
+```console
+roslaunch bme_gazebo_sensors spawn_robot.launch
+```
+
+```console
+rosrun bme_gazebo_sensors gps_waypoint_follower.py
+```
+
+![alt text][image14]
+
+## Helyes fordulás
+A robot szépen odavezet az első koordinátához, azonban a második koordinátát nem képes elérni, csak egy helyben forgolódik. Ennek az az oka, hogy a második koordináta hosszúsági foka közel azonos az első koordinátáéval, és emiatt a robotnak egyenesen "balra" kéne vezetnie. Az Euler szögekre való konvertálásnak viszont az a hátránya, hogy a szögtartományt [-pi, pi] radiánra konvertálja, aminek szakadása van 180 foknál. Erre az egyik megoldás a forgatás implementálása quaternionokban, ez azonban túlmutat ennek a tárgynak a keretein, így oldjuk meg ezt a szakadást a következő kódkiegészítéssel továbbra is Euler szögek használatával.
+
+```python
+    # calculate heading error from yaw and bearing
+    headingError = bearing - yaw
+    if headingError > math.pi:
+        headingError = headingError - (2 * math.pi) 
+    if headingError < -math.pi:
+        headingError = headingError + (2 * math.pi)
+```
+
+Indítsuk újra a szimulációt!
+
+![alt text][image15]
+
+A robot így már képes végigvezetni az összes waypoint koordinátáján!
+
+## Odometria vagy IMU használata
+
+Mi a probléma a szimulációnkkal? A valóságban nincs ilyen pontos odometriánk, sőt az abszolút orientáció sem ismert induláskor!
+Ezért használunk IMU-t, egy 6 tengelyes IMU-val (gyorsulásmérő + giroszkóp) már képesek vagyunk a gyorsulásmérő segítségével megtalálni a forgás tengelyét, a giroszkóp szögsebességeinek integrálásával pedig a pontos szöget. Ez a valóságban természetesen csak részben igaz, ugyanis a giroszkóp driftje miatt nagyon nehéz abszolút yaw mérésére használni. Az odometriával történő szenzorfúzióval ezt már egészen jól tudjuk kompenzálni, azonban ezzel csak egy későbbi leckében foglalkozunk.
+
+Most elégedjünk meg az egyszerűbb megoldással, ha olyan IMU-t használunk, amiben van magnetométer, akkor a kalibráció után a gyorsulásmérőből származó adatokkal tudunk csinálni egy döntéskompenzált iránytűt, ami abszolút orientációt ad. A mostani szimulációnkban épp ilyen a szimulált IMU. Iratkozzunk hát fel erre a `/odom` topic helyett. Nézzük meg melyik topicra van szükségünk az rqt segítségével:
+
+![alt text][image16]
+
+Az `/imu/data` topic egy `Imu` típusú üzenet a `sensor_msgs` csomagból, ami a ROS konvencióinak köszönhetően ugyanúgy quaternionban adja vissza az orientációt, tehát azon kívül, hogy milyen topicra iratkozunk fel semmi mást sem kell módosítanunk a kódunkon!
+
+```python
+def get_imu_rotation (msg):
+    global roll, pitch, yaw
+    orientation_q = msg.orientation
+    orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+    (roll, pitch, yaw) = euler_from_quaternion (orientation_list)
+```
+
+valamint
+
+```python
+#sub_odom = rospy.Subscriber ('/odom', Odometry, get_rotation)
+sub_imu = rospy.Subscriber ('/imu/data', Imu, get_imu_rotation)
+```
+
+Próbáljuk ki újra a szimulációt!
+
+![alt text][image17]
+
+Nem tapasztalunk változást, ami ebben az esetben jó hír, a robot gond nélkül végigvezetett mimnden waypointon. Ennek a megoldásnak az az előnye, hogy sokkal közelebb áll egy valódi roboton futtatható megoldáshoz, mint az, ami túlzottan a szimuláció ideális pontosságára épít.
 
 # Szenzorok 2
 ## Lidar
