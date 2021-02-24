@@ -21,6 +21,10 @@
 [image19]: ./assets/mogi_bot_lidar_2.png "Lidar"
 [image20]: ./assets/mogi_bot_lidar_3.png "Lidar"
 [image21]: ./assets/mogi_bot_lidar_4.png "Lidar"
+[image22]: ./assets/mogi_bot_velodyne_1.png "Velodyne"
+[image23]: ./assets/mogi_bot_velodyne_2.png "Velodyne"
+[image24]: ./assets/mogi_bot_velodyne_3.png "Velodyne"
+
 
 # 5. - 6. hét - Szenzorok szimulációja Gazeboban
 
@@ -723,11 +727,111 @@ sudo apt install ros-melodic-velodyne-gazebo-plugins
 
 ### URDF
 A szimulációban cseréljük le a az előző `scan_link`-et az URDF fájlban.
+```xml
+  <!-- Velodyne -->
+  <joint type="fixed" name="velodyne_joint">
+    <origin xyz="0.0 0 0.10" rpy="0 0 0"/>
+    <child link="velodyne_link"/>
+    <parent link="base_link"/>
+    <axis xyz="0 1 0" rpy="0 0 0"/>
+  </joint>
 
+  <link name='velodyne_link'>
+    <inertial>
+      <mass value="1e-5"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia
+          ixx="1e-6" ixy="0" ixz="0"
+          iyy="1e-6" iyz="0"
+          izz="1e-6"
+      />
+    </inertial>
 
+    <collision name='collision'>
+      <origin xyz="0 0 0" rpy="0 0 0"/> 
+      <geometry>
+        <box size=".1 .1 .1"/>
+      </geometry>
+    </collision>
 
-Paramterek:
-https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/velodyne_description/urdf/VLP-16.urdf.xacro
+    <visual name='velodyne_link_visual'>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename = "package://bme_gazebo_sensors/meshes/vlp16.dae"/>
+      </geometry>
+    </visual>
+
+  </link>
+```
+És jelenítsük meg a robot modelljét az új Velodyne lidarral:
+```console
+roslaunch bme_gazebo_sensors check_urdf.launch
+```
+![alt text][image22]
+
+### Gazebo plugin
+Itt is cseréljük le az előző 2D lidar plugint, mivel helyette tesszük a robotra ezt a szenzort:
+```xml
+  <!-- Velodyne -->
+  <gazebo reference="velodyne_link">
+    <sensor type="ray" name="VLP16">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>1875</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14156</min_angle>
+            <max_angle>3.14156</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>16</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.2618</min_angle>
+            <max_angle>0.2618</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>0.3</min>
+          <max>130.0</max>
+          <resolution>0.001</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.0</stddev>
+        </noise>
+      </ray>
+      <plugin name="gazebo_ros_laser_controller" filename="libgazebo_ros_velodyne_laser.so">
+        <topicName>velodyne_points</topicName>
+        <frameName>velodyne_link</frameName>
+        <min_range>0.9</min_range>
+        <max_range>130.0</max_range>
+        <gaussianNoise>0.008</gaussianNoise>
+      </plugin>
+    </sensor>
+  </gazebo>
+```
+A Velodyne lidar paramétereit az eredeti VLP-16 alapján állítottam be, ami a hivatalos repoban [ezen a linken](https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/velodyne_description/urdf/VLP-16.urdf.xacro) található.
+
+Indítsuk el a szimulációt, de előtte kapcsoljuk be a szenzor megjelenítését Gazeboban:
+```xml
+<visualize>false</visualize>
+```
+
+```console
+roslaunch bme_gazebo_sensors spawn_robot.launch
+```
+
+![alt text][image23]
+
+### RViz
+Riz esetén a 3D lidar jeleit 3D pointcloudként jelenítjük meg, ahol például a Z tengely menti szintvonalakat változó szín jelöli:
+![alt text][image24]
+
+Mivel a 3D lidar szimulációja elég erőforrás igényes, így a próba után távolítsuk is el, és tegyük vissza a 2D lidar szimulációját!
 
 ## RGBD kamera
 
