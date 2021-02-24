@@ -17,6 +17,10 @@
 [image15]: ./assets/mogi_bot_gps_3.png "GPS"
 [image16]: ./assets/mogi_bot_gps_4.png "GPS"
 [image17]: ./assets/mogi_bot_gps_5.png "GPS"
+[image18]: ./assets/mogi_bot_lidar_1.png "Lidar"
+[image19]: ./assets/mogi_bot_lidar_2.png "Lidar"
+[image20]: ./assets/mogi_bot_lidar_3.png "Lidar"
+[image21]: ./assets/mogi_bot_lidar_4.png "Lidar"
 
 # 5. - 6. hét - Szenzorok szimulációja Gazeboban
 
@@ -603,9 +607,124 @@ Nem tapasztalunk változást, ami ebben az esetben jó hír, a robot gond nélk�
 # Szenzorok 2
 ## Lidar
 
+A lidarok olyan lézer scannerek, amik meghatározzák a szenzort körülvevő környezet egyes pontjainak távolságát. Ezeket a távolságokat egy pontfelhőben tárolják. Érdemes megkülönböztetni az egy síkban scannelő 2D lidarokat a 3D-s pontfelhőt generáló lidaroktól, ugyanis a 2D és 3D pontfelhőket máshogy tároljuk és máshogy is dolgozzuk fel. Csináljuk meg először egy 2D lidar szimulációját.
+
+### URDF
+Adjuk hozzá a `scan_link`-et és a hozzátatozó jointot az URDF fájlunkhoz.
+```xml
+  <!-- Lidar -->
+  <joint type="fixed" name="scan_joint">
+    <origin xyz="0.0 0 0.15" rpy="0 0 0"/>
+    <child link="scan_link"/>
+    <parent link="base_link"/>
+    <axis xyz="0 1 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name='scan_link'>
+    <inertial>
+      <mass value="1e-5"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia
+          ixx="1e-6" ixy="0" ixz="0"
+          iyy="1e-6" iyz="0"
+          izz="1e-6"
+      />
+    </inertial>
+
+    <collision name='collision'>
+      <origin xyz="0 0 0" rpy="0 0 0"/> 
+      <geometry>
+        <box size=".1 .1 .1"/>
+      </geometry>
+    </collision>
+
+    <visual name='scan_link_visual'>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename = "package://bme_gazebo_sensors/meshes/lidar.dae"/>
+      </geometry>
+    </visual>
+
+  </link>
+```
+
+Nézzük meg a lidar modelljét és elhelyezkedését a roboton:
+```console
+roslaunch bme_gazebo_sensors check_urdf.launch
+```
+![alt text][image18]
+
+### Gazebo plugin
+Adjuk hozzá a lidar pluginját a `mogi_bot.gazebo` fájlhoz:
+```xml
+  <!-- Lidar -->
+  <gazebo reference="scan_link">
+    <sensor type="ray" name="scan_sensor">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>40</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <!--(max_angle-min_angle)/samples * resolution -->
+            <resolution>1</resolution>
+            <min_angle>-3.14156</min_angle>
+            <max_angle>3.14156</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.10</min>
+          <max>10.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise parameters based on published spec for Hokuyo laser
+               achieving "+-30mm" accuracy at range < 10m.  A mean of 0.0m and
+               stddev of 0.01m will put 99.7% of samples within 0.03m of the true
+               reading. -->
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so">
+        <topicName>/scan</topicName>
+        <frameName>scan_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+```
+Lidarok esetén érdemes a paramétereket a szimulálni kívánt lidar alapján beállítani, például a szimulációban használt lidar [0 360] fok tartományon működik, és 720 mintát vesz ezen a tartományon, tehát a felbontása 0.5 fok.
+
+Az első próbához kapcsoljuk be a szenzor működésének megjelenítését:
+```xml
+<visualize>true</visualize>
+```
+És indítsuk el a szimulációt:
+![alt text][image19]
+
+### RViz
+
+Az RViz-ben látjuk, ahogy a lidar jelét megjeleníti a robot környezetében, mint 2D pontfelhőt, valamint azt is, hogy rávetíti az URDF-ben megadott transzformációknak megfelelően a kamera képére is!
+![alt text][image20]
+
+Ha megnöveljük a scan decay time-ját, akkor egy perzisztens pontfelhőt kapunk eredményül, ami gyakorlatilag a környezet térképének felel meg. Ez a szimulációnk ideális világában igaz is, azonban a térképezési algoritmusok enneél bonyolultabbak, a valóságban ez sajnos nem így működne. A térképezési algoritmusokat is megnézzük majd a következő leckében!
+![alt text][image21]
 
 ## Velodyne VLP16 lidar
-https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/
+
+A szimulációnkban használhatunk 3D lidart is, ilyen például a Velodyne VLP16, ami teljes ROS és Gazebo szimuláció támogatással rendelkezik, amit elértek a DataspeedInc [bitbucket](https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/) repojában.
+
+A plugin használatához telepítsük fel a `Velodyne Gazebo Plugins` csomagot, aminek ugyan van [ROS wiki](http://wiki.ros.org/velodyne_gazebo_plugins)-je, de valójában a dokumentáció a fenti [bitbucket](https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/) linken érhető el.
+```console
+sudo apt install ros-melodic-velodyne-gazebo-plugins
+```
+
+### URDF
+A szimulációban cseréljük le a az előző `scan_link`-et az URDF fájlban.
+
+
 
 Paramterek:
 https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/velodyne_description/urdf/VLP-16.urdf.xacro
