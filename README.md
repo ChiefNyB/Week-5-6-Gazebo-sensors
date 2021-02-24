@@ -37,12 +37,18 @@
 <a href="https://youtu.be/-YCcQZmKJtY"><img height="400" src="./assets/youtube2.png"></a>
 
 # Tartalomjegyzék
-1. [Kezdőcsomag](#Kezdőcsomag)
-2. [A `tree` parancs](#A-`tree`-parancs)
-3. [Szenzorok 1](#Szenzorok-1)
-4. [Waypoint követés](#Waypoint-követés)
-5. [Szenzorok 2](#Szenzorok-2)
-6. [OpenCV](#OpenCV)
+1. [Kezdőcsomag](#Kezdőcsomag)  
+1.1. [A tree parancs](#A-`tree`-parancs)
+2. [Szenzorok 1](#Szenzorok-1)  
+2.1. [Kamera](#Kamera)  
+2.2. [IMU](#IMU)  
+2.3. [GPS](#GPS)
+3. [GPS waypoint követés](#GPS-waypoint-követés)
+4. [Szenzorok 2](#Szenzorok-2)  
+4.1. [Lidar](#Lidar)  
+4.2. [Velodyne VLP16 lidar](#Velodyne-VLP16-lidar)  
+4.3. [RGBD kamera](#RGBD-kamera)
+5. [Képfeldolgozás ROS-ban OpenCV-vel](#Képfeldolgozás-ROS-ban-OpenCV-vel)
 
 # Kezdőcsomag
 A lecke kezdőcsomagja épít a Week-3-4-Gazebo-basics anyagára, de egy külön GIT repositoryból dolgozunk, így nem feltétele az előző `bme_gazebo_basics` csomag megléte.
@@ -424,7 +430,7 @@ A GPS szenzorunk szimulációjához szintén a Hector pluginjét használjuk, ez
 
 A paraméterekről részletes leírást a [ROS wiki](http://wiki.ros.org/hector_gazebo_plugins#GazeboRosGps)-n olvashattok. A referencia szélességi és hosszúsági fokot a BME D épületére állítottam be.
 
-# Waypoint követés
+# GPS waypoint követés
 Készítsünk egy saját node-ot, ami képes GPS koordináták alapján vezetni a szimulált robotunkat!
 Azt már a korábbi fejezetekből tudjuk, hogy a robot mozgatásához Twist típusú üzenetet kell küldenünk a `cmd_vel` topicba, de nézzük meg milyen topicokra kell feliratkoznunk!
 
@@ -914,4 +920,4 @@ paraméter értéke, annál messzebb lát el a kameránk, de annál erőforrási
 
 Vegyük észre, hogy ebben az esetben minden képpont, ami kívül esik a kamera érzékelési tartományán teljesen fekete.
 
-# cv bridge és OpenCV
+# Képfeldolgozás ROS-ban OpenCV-vel
