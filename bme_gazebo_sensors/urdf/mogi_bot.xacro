@@ -210,7 +210,7 @@
   </link>
 
   <!-- Lidar -->
-  <!--joint type="fixed" name="scan_joint">
+  <joint type="fixed" name="scan_joint">
     <origin xyz="0.0 0 0.15" rpy="0 0 0"/>
     <child link="scan_link"/>
     <parent link="base_link"/>
@@ -242,7 +242,7 @@
       </geometry>
     </visual>
 
-  </link-->
+  </link>
 
   <!-- Velodyne -->
   <!--joint type="fixed" name="velodyne_joint">
