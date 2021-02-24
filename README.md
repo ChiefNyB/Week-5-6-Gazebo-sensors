@@ -24,6 +24,9 @@
 [image22]: ./assets/mogi_bot_velodyne_1.png "Velodyne"
 [image23]: ./assets/mogi_bot_velodyne_2.png "Velodyne"
 [image24]: ./assets/mogi_bot_velodyne_3.png "Velodyne"
+[image25]: ./assets/mogi_bot_rgbd_1.png "RGBD"
+[image26]: ./assets/mogi_bot_rgbd_2.png "RGBD"
+[image27]: ./assets/mogi_bot_rgbd_3.png "RGBD"
 
 
 # 5. - 6. hét - Szenzorok szimulációja Gazeboban
@@ -834,5 +837,80 @@ Riz esetén a 3D lidar jeleit 3D pointcloudként jelenítjük meg, ahol példáu
 Mivel a 3D lidar szimulációja elég erőforrás igényes, így a próba után távolítsuk is el, és tegyük vissza a 2D lidar szimulációját!
 
 ## RGBD kamera
+
+Az utolsó szenzor, aminek a szimulációjával foglalkozunk a manapség egyre elterjedtebb RGBD kamera, ami a 3 csatornás színes kép mellett az adott képpont kamerától mért távolságát is megadja. Ilyen kamerák az XBox Kinect, Intel Realsense vagy a ZED kamerák.
+
+Az RGBD kamerák az utóbbi időben jelentősen elterjedtek, aminek a fő oka az áruk drasztikus csökkenése és a minőség javulása. Például egy Intel Realsense D435i kamera akár 1280 × 720 pixel felbontással ad mélységi képet, RGB képet pedig 1920 x 1080 pixel felbontással 30 FPS mellett. Továbbá rendelkezik beépített IMU-val és egy olyan lézer pötty projektorral, ami segít a távolságmérésben rossz fényviszonyok vagy textúra esetén.
+
+Mivel a kameránknak már elkészítettük a linkjét, így az URDF fájlunkban nincs is szükség módosításra, csak a Gazebo plugint kell hozzáadnunk, ami a `libgazebo_ros_openni_kinect` plugint fogja használni.
+
+```xml
+  <!-- RGBD camera -->
+  <gazebo reference="camera_link">
+    <sensor type="depth" name="camera2">
+      <always_on>1</always_on>
+      <update_rate>20.0</update_rate>
+      <visualize>false</visualize>             
+      <camera>
+        <horizontal_fov>1.047</horizontal_fov>  
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.5</near>
+          <far>10.0</far>
+        </clip>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_openni_kinect.so">
+        <baseline>0.2</baseline>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>depth_camera</cameraName>
+        <frameName>camera_link_optical</frameName>                   
+        <imageTopicName>rgb/image_raw</imageTopicName>
+        <depthImageTopicName>depth/image_raw</depthImageTopicName>
+        <pointCloudTopicName>depth/points</pointCloudTopicName>
+        <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>              
+        <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>            
+        <pointCloudCutoff>0.5</pointCloudCutoff>
+        <pointCloudCutoffMax>10.0</pointCloudCutoffMax>
+        <hackBaseline>0.0</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+        <CxPrime>0.0</CxPrime>
+        <Cx>0.0</Cx>
+        <Cy>0.0</Cy>
+        <focalLength>0.0</focalLength>
+      </plugin>
+    </sensor>
+  </gazebo>
+```
+
+És indítsuk el a szimulációt!
+
+```console
+roslaunch bme_gazebo_sensors spawn_robot.launch
+```
+
+![alt text][image25]
+
+Nézzük meg a kamerák képét rqt-ben is!
+
+![alt text][image26]
+
+A 3D pontfelhőn kívül egy szürkeárnyalatos mélységi képet is kapunk a távolságadatokról, ami minél világosabb annál távolabb van az adott pont. Minél magasabb a
+```xml
+<pointCloudCutoffMax>10.0</pointCloudCutoffMax>
+```
+paraméter értéke, annál messzebb lát el a kameránk, de annál erőforrásigényesebb is a szimulációja. Állítsuk most át ezt 3 méterre és nézzük meg a kamerák képeit rqt-ben!
+
+![alt text][image27]
+
+Vegyük észre, hogy ebben az esetben minden képpont, ami kívül esik a kamera érzékelési tartományán teljesen fekete.
 
 # cv bridge és OpenCV
