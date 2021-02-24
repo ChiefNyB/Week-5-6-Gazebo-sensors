@@ -97,6 +97,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        scan_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -124,6 +129,8 @@ Visualization Manager:
           Value: true
         right_wheel:
           Value: true
+        scan_link:
+          Value: true
       Marker Scale: 0.5
       Name: TF
       Show Arrows: true
@@ -141,6 +148,8 @@ Visualization Manager:
               left_wheel:
                 {}
               right_wheel:
+                {}
+              scan_link:
                 {}
       Update Interval: 0
       Value: true
@@ -304,7 +313,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /camera/depth/points
+      Topic: /depth_camera/depth/points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
