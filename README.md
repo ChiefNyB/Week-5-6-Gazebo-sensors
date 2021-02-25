@@ -27,6 +27,10 @@
 [image25]: ./assets/mogi_bot_rgbd_1.png "RGBD"
 [image26]: ./assets/mogi_bot_rgbd_2.png "RGBD"
 [image27]: ./assets/mogi_bot_rgbd_3.png "RGBD"
+[image28]: ./assets/add_ball.png "Ball"
+[image29]: ./assets/chase_ball_1.png "Ball"
+[image30]: ./assets/chase_ball_2.png "Ball"
+[image31]: ./assets/chase_ball_3.png "Ball"
 
 
 # 5. - 6. hét - Szenzorok szimulációja Gazeboban
@@ -921,3 +925,372 @@ paraméter értéke, annál messzebb lát el a kameránk, de annál erőforrási
 Vegyük észre, hogy ebben az esetben minden képpont, ami kívül esik a kamera érzékelési tartományán teljesen fekete.
 
 # Képfeldolgozás ROS-ban OpenCV-vel
+Ha képfeldolgozás, akkor nem is kérdés, hogy OpenCV-t fogunk használni. Természetesen léteznek más ingyenes és nyílt forrású képfeldolgozásra specializált library-k, Python esetén például a PIL/Pillow, a scikit-image, vagy megoldhatnánk mindent numpy-ból is, de szinte minden esetben biztosra megyünk, ha az OpenCV mellett döntünk. Főleg mert a ROS-hoz hasonlóan nagyon széleskörűen használt és jól dokumentált C++ és Python API-val rendelkezik, ami sokkal egyszerűbb átjárást biztosít a nyelvek között, mint egy olyan megoldás, ami csak Python esetén érhető el.
+
+A ROS egy alap csomagjának segítségével, a [cv_bridge](http://wiki.ros.org/cv_bridge) segítségével könnyű átjárást biztosít a ROS és az OpenCV között. Könnyedén tudunk ROS üzenetből OpenCV image-et készíteni és az OpenCV image is könnyedén ROS üzenetté konvertálható.
+
+Én a kód elkészítése során OpenCV 3.2.0 verziót használtam, amit egyszerűen a Python csomagkezelőjével, a pip-pel tudtok telepíteni.
+Mivel a pip automatikusan a legfrissebb változatot fogja telepíteni, ami az adott Python verzióhoz elérhető, így ha egy konkrét verziót szeretnétek feltenni, használjátok a `pip install opencv-python==$VERSION` parancsot, ahol a $VERSION természetesen az a verzió, amit szeretnétek kiválasztani. Hogy milyen verziók érhetők el, az könnyen kilistázható a pip-pel:
+
+```console
+david@DavidsLenovoX1:~/bme_catkin_ws$ pip install opencv-python==
+Collecting opencv-python==
+  Could not find a version that satisfies the requirement opencv-python== (from versions: 3.1.0.0, 3.1.0.1, 3.1.0.2, 3.1.0.3, 3.1.0.4, 3.1.0.5, 3.2.0.6, 3.2.0.7, 3.2.0.8, 3.3.0.9, 3.3.0.10, 3.3.1.11, 3.4.0.12, 3.4.0.14, 3.4.1.15, 3.4.2.16, 3.4.2.17, 3.4.3.18, 3.4.4.19, 3.4.5.20, 3.4.6.27, 3.4.7.28, 3.4.8.29, 3.4.9.31, 3.4.10.37, 4.0.0.21, 4.0.1.23, 4.0.1.24, 4.1.0.25, 4.1.1.26, 4.1.2.30, 4.2.0.32, 4.3.0.38)
+No matching distribution found for opencv-python==
+```
+
+Nyugodtan használjatok más verziót, mint én, különösen ha Python 3.x-et használtok Noetic-kel, van rá esély, hogy az eltérő OpenCV verzió miatt valami nem fog egyből futni a mellékelt kódban, de ilyenkor próbáljátok megtalálni és megoldani a hibát (változást), sokkal izgalmasabb, mint egyszerűen ugynazt a verziót telepíteni, mint ami nálam van.
+
+## ROS node
+
+Ezúttal is egy Python node-ot fogunk készíteni az egyszerűség kedvéért. Az OpenCV és Numpy library-knak telepítve kell lenniük a Pythonotokhoz a kód használatához. Hozzuk létre a `chase_the_ball.py` fájlt a scripts mappában.
+
+```python
+#!/usr/bin/env python
+
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import Image, CompressedImage
+from geometry_msgs.msg import Twist
+import rospy
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
+import threading
+import numpy as np
+
+class BufferQueue(Queue):
+    """Slight modification of the standard Queue that discards the oldest item
+    when adding an item and the queue is full.
+    """
+    def put(self, item, *args, **kwargs):
+        # The base implementation, for reference:
+        # https://github.com/python/cpython/blob/2.7/Lib/Queue.py#L107
+        # https://github.com/python/cpython/blob/3.8/Lib/queue.py#L121
+        with self.mutex:
+            if self.maxsize > 0 and self._qsize() == self.maxsize:
+                self._get()
+            self._put(item)
+            self.unfinished_tasks += 1
+            self.not_empty.notify()
+
+class cvThread(threading.Thread):
+    """
+    Thread that displays and processes the current image
+    It is its own thread so that all display can be done
+    in one thread to overcome imshow limitations and
+    https://github.com/ros-perception/image_pipeline/issues/85
+    """
+    def __init__(self, queue):
+        threading.Thread.__init__(self)
+        self.queue = queue
+        self.image = None
+
+        # Initialize published Twist message
+        self.cmd_vel = Twist()
+        self.cmd_vel.linear.x = 0
+        self.cmd_vel.angular.z = 0
+
+    def run(self):
+        # Create a single OpenCV window
+        cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
+        cv2.resizeWindow("frame", 800,600)
+
+        while True:
+            self.image = self.queue.get()
+
+            # Process the current image
+            mask, contour, crosshair = self.processImage(self.image)
+
+            # Add processed images as small images on top of main image
+            result = self.addSmallPictures(self.image, [mask, contour, crosshair])
+            cv2.imshow("frame", result)
+
+            # Check for 'q' key to exit
+            k = cv2.waitKey(6) & 0xFF
+            if k in [27, ord('q')]:
+                rospy.signal_shutdown('Quit')
+
+    def processImage(self, img):
+
+        rows,cols = img.shape[:2]
+
+        R,G,B = self.convert2rgb(img)
+
+        redMask = self.thresholdBinary(R, (220, 255))
+        stackedMask = np.dstack((redMask, redMask, redMask))
+        contourMask = stackedMask.copy()
+        crosshairMask = stackedMask.copy()
+
+        # return value of findContours depends on OpenCV version
+        (_, contours,hierarchy) = cv2.findContours(redMask.copy(), 1, cv2.CHAIN_APPROX_NONE)
+
+        # Find the biggest contour (if detected)
+        if len(contours) > 0:
+            
+            c = max(contours, key=cv2.contourArea)
+            M = cv2.moments(c)
+
+            # Make sure that "m00" won't cause ZeroDivisionError: float division by zero
+            if M["m00"] != 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+            else:
+                cx, cy = 0, 0
+
+            # Show contour and centroid
+            cv2.drawContours(contourMask, contours, -1, (0,255,0), 10)
+            cv2.circle(contourMask, (cx, cy), 5, (0, 255, 0), -1)
+
+            # Show crosshair and difference from middle point
+            cv2.line(crosshairMask,(cx,0),(cx,rows),(0,0,255),10)
+            cv2.line(crosshairMask,(0,cy),(cols,cy),(0,0,255),10)
+            cv2.line(crosshairMask,(int(cols/2),0),(int(cols/2),rows),(255,0,0),10)
+
+            # Chase the ball
+            #print(abs(cols - cx), cx, cols)
+            if abs(cols/2 - cx) > 20:
+                self.cmd_vel.linear.x = 0
+                if cols/2 > cx:
+                    self.cmd_vel.angular.z = 0.2
+                else:
+                    self.cmd_vel.angular.z = -0.2
+
+            else:
+                self.cmd_vel.linear.x = 0.2
+                self.cmd_vel.angular.z = 0
+
+        else:
+            self.cmd_vel.linear.x = 0
+            self.cmd_vel.angular.z = 0
+
+        # Publish cmd_vel
+        pub.publish(self.cmd_vel)
+
+        # Return processed frames
+        return redMask, contourMask, crosshairMask
+
+    # Convert to RGB channels
+    def convert2rgb(self, img):
+        R = img[:, :, 2]
+        G = img[:, :, 1]
+        B = img[:, :, 0]
+
+        return R, G, B
+
+    # Apply threshold and result a binary image
+    def thresholdBinary(self, img, thresh=(200, 255)):
+        binary = np.zeros_like(img)
+        binary[(img >= thresh[0]) & (img <= thresh[1])] = 1
+
+        return binary*255
+
+    # Add small images to the top row of the main image
+    def addSmallPictures(self, img, small_images, size=(160, 120)):
+        '''
+        :param img: main image
+        :param small_images: array of small images
+        :param size: size of small images
+        :return: overlayed image
+        '''
+
+        x_base_offset = 40
+        y_base_offset = 10
+
+        x_offset = x_base_offset
+        y_offset = y_base_offset
+
+        for small in small_images:
+            small = cv2.resize(small, size)
+            if len(small.shape) == 2:
+                small = np.dstack((small, small, small))
+
+            img[y_offset: y_offset + size[1], x_offset: x_offset + size[0]] = small
+
+            x_offset += size[0] + x_base_offset
+
+        return img
+
+def queueMonocular(msg):
+    try:
+        # Convert your ROS Image message to OpenCV2
+        cv2Img = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+    except CvBridgeError as e:
+        print(e)
+    else:
+        qMono.put(cv2Img)
+
+print("OpenCV version: %s" % cv2.__version__)
+
+queueSize = 1      
+qMono = BufferQueue(queueSize)
+
+cvThreadHandle = cvThread(qMono)
+cvThreadHandle.setDaemon(True)
+cvThreadHandle.start()
+
+bridge = CvBridge()
+
+rospy.init_node('ball_chaser')
+# Define your image topic
+image_topic = "/head_camera/image_raw"
+# Set up your subscriber and define its callback
+rospy.Subscriber(image_topic, Image, queueMonocular)
+
+pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
+# Spin until Ctrl+C
+rospy.spin()
+```
+
+Nézzük a kódot! Importáljuk be a szükséges library-kat, ilyen az OpenCV (`cv2`) a `numpy` és a `cv_bridge`, valamint a szükséges ROS üzenettípusok.
+Egy speciális queue-t fogunk használni a kódban a képkockák tárolására és a `threading` segítségével egy több szálon futó kódot készítünk.
+
+```python
+#!/usr/bin/env python
+
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import Image, CompressedImage
+from geometry_msgs.msg import Twist
+import rospy
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
+import threading
+import numpy as np
+```
+
+A queue-nk annyiban különleges, hogy abban az esetben, ha már tele van, nem dobja el a következő be már nem férő képkockát, hanem helyette üríti belőle a korábbit.
+
+```python
+class BufferQueue(Queue):
+    """Slight modification of the standard Queue that discards the oldest item
+    when adding an item and the queue is full.
+    """
+    def put(self, item, *args, **kwargs):
+        # The base implementation, for reference:
+        # https://github.com/python/cpython/blob/2.7/Lib/Queue.py#L107
+        # https://github.com/python/cpython/blob/3.8/Lib/queue.py#L121
+        with self.mutex:
+            if self.maxsize > 0 and self._qsize() == self.maxsize:
+                self._get()
+            self._put(item)
+            self.unfinished_tasks += 1
+            self.not_empty.notify()
+```
+
+A `cvThread`-ben történik a képek feldolgozása és megjelenítése, és ezen kívül 3 helper function is található benne, amik segítenek a képkockák feldolgozásában. Vegyük észre, hogy az OpenCV képkockáinkban a csatornák sorrendje BGR és nem RGB!
+```python
+    # Convert to RGB channels
+    def convert2rgb(self, img):
+        R = img[:, :, 2]
+        G = img[:, :, 1]
+        B = img[:, :, 0]
+
+        return R, G, B
+
+    # Apply threshold and result a binary image
+    def thresholdBinary(self, img, thresh=(200, 255)):
+        binary = np.zeros_like(img)
+        binary[(img >= thresh[0]) & (img <= thresh[1])] = 1
+
+        return binary*255
+
+    # Add small images to the top row of the main image
+    def addSmallPictures(self, img, small_images, size=(160, 120)):
+        '''
+        :param img: main image
+        :param small_images: array of small images
+        :param size: size of small images
+        :return: overlayed image
+        '''
+
+        x_base_offset = 40
+        y_base_offset = 10
+
+        x_offset = x_base_offset
+        y_offset = y_base_offset
+
+        for small in small_images:
+            small = cv2.resize(small, size)
+            if len(small.shape) == 2:
+                small = np.dstack((small, small, small))
+
+            img[y_offset: y_offset + size[1], x_offset: x_offset + size[0]] = small
+
+            x_offset += size[0] + x_base_offset
+
+        return img
+```
+
+A kód további része pedig egyszerűen létrehozza a queue-t és a threadet, feliratkozik a `/head_camera/image_raw` topicra, valamint létrehoz egy `/cmd_vel` publishert. A `/head_camera/image_raw` topicra való feliratkozás callback függvénye a `queueMonocular`, ami a `cv_bridge` segítségével már OpenCV kompatibilis képkockákat tesz a queue-nkba.
+
+```python
+def queueMonocular(msg):
+    try:
+        # Convert your ROS Image message to OpenCV2
+        cv2Img = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+    except CvBridgeError as e:
+        print(e)
+    else:
+        qMono.put(cv2Img)
+
+print("OpenCV version: %s" % cv2.__version__)
+
+queueSize = 1      
+qMono = BufferQueue(queueSize)
+
+cvThreadHandle = cvThread(qMono)
+cvThreadHandle.setDaemon(True)
+cvThreadHandle.start()
+
+bridge = CvBridge()
+
+rospy.init_node('ball_chaser')
+# Define your image topic
+image_topic = "/head_camera/image_raw"
+# Set up your subscriber and define its callback
+rospy.Subscriber(image_topic, Image, queueMonocular)
+
+pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
+# Spin until Ctrl+C
+rospy.spin()
+```
+
+Ne feledkezzünk el a fájl futtatható tételéről a `chmod +x` paranccsal, és indítsuk el a szimulációt, valamint az új node-unkat!
+```console
+roslaunch bme_gazebo_sensors spawn_robot.launch
+```
+
+valamint:
+```console
+rosrun bme_gazebo_sensors chase_the_ball.py
+```
+
+Indulás után ezt látjuk:  
+![alt text][image31]
+
+Szükségünk van valami piros objektumra, amit követhetünk, hiszen így állítottuk be a szűrési paraméterünket a `processImage` függvényünkben!
+```python
+R,G,B = self.convert2rgb(img)
+
+redMask = self.thresholdBinary(R, (220, 255))
+```
+
+## Adjunk hozzá egy piros labdát
+
+Ha még nincs piros labdánk a meglévő modelljeink között, csináljunk egyet a model editorral:
+![alt text][image28]
+
+Mentsük el és utána már bármikor elérhető lesz az insert fül alatt.
+![alt text][image29]
+
+Láthatjuk, hogy a node-unk színszűrése mostmár észre is veszi a labdát, megkeresi a kontúrját, valamint a kontúr centroidját, és a centroid alapján mozgatja a robotot, amíg a labda épp a kamerával szembe nem kerül.
+
+![alt text][image30]
+
+És végül a videó a működésről, amit a bevezetés során már láttunk:
+
+<a href="https://youtu.be/-YCcQZmKJtY"><img height="400" src="./assets/youtube2.png"></a>
