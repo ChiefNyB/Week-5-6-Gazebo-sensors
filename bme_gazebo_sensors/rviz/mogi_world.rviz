@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /RobotModel1
         - /TF1
+        - /Imu2/Axes properties1
       Splitter Ratio: 0.5
     Tree Height: 792
   - Class: rviz/Selection
@@ -96,6 +97,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        scan_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -123,6 +129,8 @@ Visualization Manager:
           Value: true
         right_wheel:
           Value: true
+        scan_link:
+          Value: true
       Marker Scale: 0.5
       Name: TF
       Show Arrows: true
@@ -140,6 +148,8 @@ Visualization Manager:
               left_wheel:
                 {}
               right_wheel:
+                {}
+              scan_link:
                 {}
       Update Interval: 0
       Value: true
@@ -195,6 +205,29 @@ Visualization Manager:
       Topic: /imu/data
       Unreliable: false
       Value: true
+    - Acceleration properties:
+        Acc. vector alpha: 1
+        Acc. vector color: 255; 0; 0
+        Acc. vector scale: 1
+        Derotate acceleration: true
+        Enable acceleration: false
+      Axes properties:
+        Axes scale: 0.30000001192092896
+        Enable axes: true
+      Box properties:
+        Box alpha: 1
+        Box color: 255; 0; 0
+        Enable box: false
+        x_scale: 1
+        y_scale: 1
+        z_scale: 1
+      Class: rviz_imu_plugin/Imu
+      Enabled: true
+      Name: Imu
+      Topic: /imu/data
+      Unreliable: false
+      Value: true
+      fixed_frame_orientation: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -280,7 +313,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /camera/depth/points
+      Topic: /depth_camera/depth/points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -313,16 +346,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 16.437891006469727
+      Distance: 0.9731181859970093
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 4.145267009735107
-        Y: 3.649043083190918
-        Z: 5.633110523223877
+        X: 2.173267126083374
+        Y: 0.4586036801338196
+        Z: 1.5293534994125366
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
