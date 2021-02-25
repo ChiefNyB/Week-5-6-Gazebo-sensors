@@ -91,12 +91,12 @@ david@DavidsLenovoX1:~/bme_catkin_ws/src/Week-5-6-Gazebo-sensors/bme_gazebo_sens
 └── worlds
     └── world_modified.world
 ```
-A mappák tartalma egyszerűen listázható így a `tree` paranccsal, ha csak bizonyos mélységig szeretnétek listázni, akkor megtehetitek a `-L` kapcsoló segítségével. Példul `tree -L 2`.
+A mappák tartalma egyszerűen listázható így a `tree` paranccsal, ha csak bizonyos mélységig szeretnétek listázni, akkor megtehetitek a `-L` kapcsoló segítségével. Például `tree -L 2`.
 
 # Szenzorok 1
 ## Kamera
 A kamera hozzáadása két lépésben történik, először adjuk hozzá a kamerát a robotunk URDF fájljához.
-A kamera egy új link lesz `camera_link` néven, ami fixed jointtal csatlakozik a robot alvázához. Az egyszerűség kedvéért, legyen a kameránk egy kis piros kocka.
+A kamera egy új link lesz `camera_link` néven, ami fixed joint-tal csatlakozik a robot alvázához. Az egyszerűség kedvéért, legyen a kameránk egy kis piros kocka.
 
 ### URDF
 ```xml
@@ -141,7 +141,7 @@ A kamera egy új link lesz `camera_link` néven, ami fixed jointtal csatlakozik 
   </gazebo>
 ```
 
-A kamerákat használhatunk ROS esetén a transzformációk megadása nélkül is, azonban ez a gyakorlatban nem praktikus, mert az RViz képes a megjelenített adatokat a transzformációknak megfelelően overlay-elni a kamera képére. Ez csak akkor működik, ha a kameránk transzformációját megadtuk (és helyesen adtuk meg) az URDF fájlban.
+A kamerákat használhatjuk ROS esetén a transzformációk megadása nélkül is, azonban ez a gyakorlatban nem praktikus, mert az RViz képes a megjelenített adatokat a transzformációknak megfelelően overlay-elni a kamera képére. Ez csak akkor működik, ha a kameránk transzformációját megadtuk (és helyesen adtuk meg) az URDF fájlban.
 
 A Gazebo és az RViz kamera transzformációja között azonban van némi ellentmondás, és ha csak a fenti sorok szerepelnek az URDF-ben helytelen lesz a kamera képére vetített overlay.
 
@@ -225,7 +225,7 @@ roslaunch bme_gazebo_sensors spawn_robot.launch
 
 ![alt text][image3]
 
-A kamera képére ráközelítve láthatjátok az overlayt. Ez a későbbiekben, ahol több szenzort is adunk majd a robotunkhoz hasznosabb és látványosabb lesz.
+A kamera képére ráközelítve láthatjátok az overlay-t. Ez a későbbiekben, ahol több szenzort is adunk majd a robotunkhoz hasznosabb és látványosabb lesz.
 
 ![alt text][image4]
 
@@ -247,10 +247,10 @@ A fenti képen egy szűkebb a lentin egy tágabb látószögű kamera képét l�
 
 Ezen felül a Gazeboval lehetséges a [Brown-Conrady féle lencsetorzítás modell](https://en.wikipedia.org/wiki/Distortion_(optics)) használata is. Ezeket a valós kameránk kalibrációjából tudjuk meghatározni. Részletes információ [itt](http://gazebosim.org/tutorials?tut=camera_distortion&cat=sensors) érhető el.
 
-Az RViz után nézzük meg a kamera által küldött topicokat rqt-ben is:
+Az RViz után nézzük meg a kamera által küldött topic-okat rqt-ben is:
 ![alt text][image10]
 
-A szimulált kamera alapértelmezetten a `/head_camera/image_raw` topicban küldi a kamera streamet. Ezt a plugin beállításainál a következő paraméterekkel adtuk meg:
+A szimulált kamera alapértelmezetten a `/head_camera/image_raw` topicban küldi a kamera stream-et. Ezt a plugin beállításainál a következő paraméterekkel adtuk meg:
 ```xml
 <cameraName>head_camera</cameraName>
 <imageTopicName>image_raw</imageTopicName>
@@ -258,14 +258,14 @@ A szimulált kamera alapértelmezetten a `/head_camera/image_raw` topicban küld
 
 ### Videótömörítés
 
-ROS esetén a kamera alapértelmezetten az [image transport](http://wiki.ros.org/image_transport) csomag segjtségével küldi a tömörítetlen streamet. Ez ennek megfelelően nagy sávszélességet is igényel. Ez egy mobil robot esetén ahol 1 vagy több kamera képét egy másik hálózati gépen is szeretnénk elérni nem elfogadható terhelés a hálózaton.
+ROS esetén a kamera alapértelmezetten az [image transport](http://wiki.ros.org/image_transport) csomag segjtségével küldi a tömörítetlen stream-et. Ez ennek megfelelően nagy sávszélességet is igényel. Ez egy mobil robot esetén ahol 1 vagy több kamera képét egy másik hálózati gépen is szeretnénk elérni nem elfogadható terhelés a hálózaton.
 
 A megoldás a kamera stream tömörítése, ROS esetén szerencsére ehhez sem kell saját alkalmazást fejleszteni, ugyanis az image transport csomag kezel plugineket. ROS esetén a két legelterjedtebb plugin a [compressed image transport](http://wiki.ros.org/compressed_image_transport) valamint a [theora image transport](http://wiki.ros.org/theora_image_transport).
 
 Ezeket a csomagokat csak egyszerűen telepítenünk kell és automatikusan megjelennek a tömörített képet tartalmazó topicok.
 A compressed image transport konfigurálható jpg vagy png tömörítéssel, valamint a tömörítés mértékével.
 
-De még ennél is szignifikánsan kisebb streamet eredményez a [theora tömörítés](https://en.wikipedia.org/wiki/Theora), ami egy teljesen nyílt forrású és ingyenes videótömörítési eljárás.
+De még ennél is szignifikánsan kisebb stream-et eredményez a [theora tömörítés](https://en.wikipedia.org/wiki/Theora), ami egy teljesen nyílt forrású és ingyenes videótömörítési eljárás.
 
 És ezen felül a ROS-nak köszönhetően arra is van lehetőség, hogy a tömörítés paramétereit online változtassuk! Erre a ROS dynamic reconfigure toolját fogjuk használni, tegyünk is vele néhány próbát és közben figyeljük meg a sávszélesség adatokat rqt-ben!
 ```console
@@ -339,7 +339,7 @@ A Gazebo camera pluginjével ezen kívül akár nagy látószögű kamerát is s
 
 ## IMU
 
-Az IMU az `Inertial Measurement Unit` rövidítése, és minimum egy 3 tengelyes MEMS gyorsulásmérőt és egy 3 tengelyes MEMS giroszkópot értünk alatta. Sokszor ez kiegészül egy 3 tengelyes magnetométerrel és akár egy barométerrel is. Az IMU nem helyettesíti egy robot egyéb szenzorait (pl. odometria), viszont szenzorfúzió segítségével pontosíthatja a többi szenzor adatát.
+Az IMU az `Inertial Measurement Unit` rövidítése, és minimum egy 3 tengelyes MEMS gyorsulásmérőt és egy 3 tengelyes MEMS giroszkópot értünk alatta. Sokszor ez kiegészül egy 3 tengelyes magnetométerrel és akár egy barométerrel is. Az IMU nem helyettesíti egy robot egyéb szenzorjait (pl. odometria), viszont szenzorfúzió segítségével pontosíthatja a többi szenzor adatát.
 
 IMU szimulációra több Gazebo plugin is létezik, én az alábbi Hector IMU controllert használom itt, ami a [Darmstadt-i egyetem](https://www.teamhector.de/) fejlesztése, és itt találjátok a ROS Wiki-n: http://wiki.ros.org/hector_gazebo_plugins.
 
@@ -348,10 +348,10 @@ A Linux csomagkezelőjével egyszerűen fel tudjátok tenni a Hector Gazebo plug
 sudo apt install ros-melodic-hector-gazebo-plugins
 ```
 
-Plusz olvasmánynak, egyéb IMU pluginekről és az összehasonlításukról szól ez a [diplomamunka](https://dspace.cvut.cz/bitstream/handle/10467/83404/F3-DP-2019-Cesenek-David-master_thesis_imu_modeling_cesenek_final-merged.pdf?sequence=-1&isAllowed=y) a prágai műszaki egyetmről.
+Plusz olvasmánynak, egyéb IMU pluginekről és az összehasonlításukról szól ez a [diplomamunka](https://dspace.cvut.cz/bitstream/handle/10467/83404/F3-DP-2019-Cesenek-David-master_thesis_imu_modeling_cesenek_final-merged.pdf?sequence=-1&isAllowed=y) a prágai műszaki egyetemről.
 
 ### URDF
-Az IMU-hoz is csinálunk egy új linket és jointot az URDF-ben, de ebben az esetben nem lesz sem piros kocka, se más megjelenése, egyszerűen a robot alvázának origójához van fixen rögzítve.
+Az IMU-hoz is csinálunk egy új linket és joint-ot az URDF-ben, de ebben az esetben nem lesz sem piros kocka, se más megjelenése, egyszerűen a robot alvázának origójához van fixen rögzítve.
 
 ```xml
   <!-- IMU -->
@@ -395,7 +395,7 @@ roslaunch bme_gazebo_sensors spawn_robot.launch
 ![alt text][image5]
 
 ### RViz
-Az IMU jelének megjelenítése egy csúnya nagy lila nyíl, aminek a scale-je nem is állítható. Ennek az az oka, hogy ez az egyik RViz plugin tutorial anyaga:  
+Az IMU jelének megjelenítése egy csúnya nagy lila nyíl (ami egyébként a gyorsulásvektort mutatja), aminek a mérete nem is állítható. Ennek az az oka, hogy ez az egyik RViz plugin tutorial anyaga:  
 http://docs.ros.org/en/melodic/api/rviz_plugin_tutorials/html/display_plugin_tutorial.html
 
 Ennél egy kicsit szebb megjelenítő az RViz IMU Plugin, aminek ez a ROS wiki oldala: http://wiki.ros.org/rviz_imu_plugin.
@@ -408,11 +408,11 @@ sudo apt install ros-melodic-rviz-imu-plugin
 Ez egy jobban értelmezhető tengely jelölőt tesz a robotra az IMU jele alapján.
 ![alt text][image6]
 
-A működését bármikor gyorsan ellenőrízhetjük, ha a Gazeboban egy kicsit megforgatjátok a robotot.
+A működését bármikor gyorsan ellenőrizhetjük, ha a Gazeboban egy kicsit megforgatjátok a robotot.
 ![alt text][image7]
 
 ## GPS
-A GPS szenzorunk szimulációjához szintén a Hector pluginjét használjuk, ezúttal nem szükséges kiegészítenünk az URDF fájlunkat, elegendő hozzáadni a Gazebo plugint, ami referenciaként a robot alvázára hivatkozik.
+A GPS szenzorunk szimulációjához szintén a Hector plugin-jét használjuk, ezúttal nem szükséges kiegészítenünk az URDF fájlunkat, elegendő hozzáadni a Gazebo plugin-t, ami referenciaként a robot alvázára hivatkozik.
 
 ```xml
   <gazebo>
@@ -559,7 +559,7 @@ while not rospy.is_shutdown():
 ```
 
 ## Haversine formula
-Mivel a GPS kooridináták nem egy sík felület X, Y koordináta párjai, ezért szükségünk van egy speciális formulára, ami a szélességi és hosszúsági fokok alapján meghatározza a távolságot és az irányt a gömb felszínén. Erre a fenti kódban a [Haversine formulát](https://en.wikipedia.org/wiki/Haversine_formula) használjuk.
+Mivel a GPS koordináták nem egy sík felület X, Y koordináta párjai, ezért szükségünk van egy speciális formulára, ami a szélességi és hosszúsági fokok alapján meghatározza a távolságot és az irányt a gömb felszínén. Erre a fenti kódban a [Haversine formulát](https://en.wikipedia.org/wiki/Haversine_formula) használjuk.
 
 Indítsuk el a szimulációt, majd egy másik terminálban futtassuk az új node-unkat:
 ```console
@@ -573,7 +573,7 @@ rosrun bme_gazebo_sensors gps_waypoint_follower.py
 ![alt text][image14]
 
 ## Helyes fordulás
-A robot szépen odavezet az első koordinátához, azonban a második koordinátát nem képes elérni, csak egy helyben forgolódik. Ennek az az oka, hogy a második koordináta hosszúsági foka közel azonos az első koordinátáéval, és emiatt a robotnak egyenesen "balra" kéne vezetnie. Az Euler szögekre való konvertálásnak viszont az a hátránya, hogy a szögtartományt [-pi, pi] radiánra konvertálja, aminek szakadása van 180 foknál. Erre az egyik megoldás a forgatás implementálása quaternionokban, ez azonban túlmutat ennek a tárgynak a keretein, így oldjuk meg ezt a szakadást a következő kódkiegészítéssel továbbra is Euler szögek használatával.
+A robot szépen odavezet az első koordinátához, azonban a második koordinátát nem képes elérni, csak egyhelyben forgolódik. Ennek az az oka, hogy a második koordináta hosszúsági foka közel azonos az első koordinátáéval, és emiatt a robotnak egyenesen "balra" kéne vezetnie. Az Euler szögekre való konvertálásnak viszont az a hátránya, hogy a szögtartományt [-pi, pi] radiánra konvertálja, aminek szakadása van 180 foknál. Erre az egyik megoldás a forgatás implementálása quaternionokban, ez azonban túlmutat ennek a tárgynak a keretein, így oldjuk meg ezt a szakadást a következő kódkiegészítéssel továbbra is Euler szögek használatával.
 
 ```python
     # calculate heading error from yaw and bearing
@@ -588,7 +588,7 @@ Indítsuk újra a szimulációt!
 
 ![alt text][image15]
 
-A robot így már képes végigvezetni az összes waypoint koordinátáján!
+A robot így már képes végig vezetni az összes waypoint koordinátáján!
 
 ## Odometria vagy IMU használata
 
@@ -620,7 +620,7 @@ Próbáljuk ki újra a szimulációt!
 
 ![alt text][image17]
 
-Nem tapasztalunk változást, ami ebben az esetben jó hír, a robot gond nélkül végigvezetett mimnden waypointon. Ennek a megoldásnak az az előnye, hogy sokkal közelebb áll egy valódi roboton futtatható megoldáshoz, mint az, ami túlzottan a szimuláció ideális pontosságára épít.
+Nem tapasztalunk változást, ami ebben az esetben jó hír, a robot gond nélkül végigvezetett minden waypointon. Ennek a megoldásnak az az előnye, hogy sokkal közelebb áll egy valódi roboton futtatható megoldáshoz, mint az, ami túlzottan a szimuláció ideális pontosságára épít.
 
 # Szenzorok 2
 ## Lidar
@@ -727,7 +727,7 @@ Az első próbához kapcsoljuk be a szenzor működésének megjelenítését:
 Az RViz-ben látjuk, ahogy a lidar jelét megjeleníti a robot környezetében, mint 2D pontfelhőt, valamint azt is, hogy rávetíti az URDF-ben megadott transzformációknak megfelelően a kamera képére is!
 ![alt text][image20]
 
-Ha megnöveljük a scan decay time-ját, akkor egy perzisztens pontfelhőt kapunk eredményül, ami gyakorlatilag a környezet térképének felel meg. Ez a szimulációnk ideális világában igaz is, azonban a térképezési algoritmusok enneél bonyolultabbak, a valóságban ez sajnos nem így működne. A térképezési algoritmusokat is megnézzük majd a következő leckében!
+Ha megnöveljük a scan decay time-ját, akkor egy perzisztens pontfelhőt kapunk eredményül, ami gyakorlatilag a környezet térképének felel meg. Ez a szimulációnk ideális világában igaz is, azonban a térképezési algoritmusok ennél bonyolultabbak, a valóságban ez sajnos nem így működne. A térképezési algoritmusokat is megnézzük majd a következő leckében!
 ![alt text][image21]
 
 ## Velodyne VLP16 lidar
@@ -842,14 +842,14 @@ roslaunch bme_gazebo_sensors spawn_robot.launch
 ![alt text][image23]
 
 ### RViz
-Riz esetén a 3D lidar jeleit 3D pointcloudként jelenítjük meg, ahol például a Z tengely menti szintvonalakat változó szín jelöli:
+RViz esetén a 3D lidar jeleit 3D pointcloud-ként jelenítjük meg, ahol például a Z tengely menti szintvonalakat változó szín jelöli:
 ![alt text][image24]
 
 Mivel a 3D lidar szimulációja elég erőforrás igényes, így a próba után távolítsuk is el, és tegyük vissza a 2D lidar szimulációját!
 
 ## RGBD kamera
 
-Az utolsó szenzor, aminek a szimulációjával foglalkozunk a manapség egyre elterjedtebb RGBD kamera, ami a 3 csatornás színes kép mellett az adott képpont kamerától mért távolságát is megadja. Ilyen kamerák az XBox Kinect, Intel Realsense vagy a ZED kamerák.
+Az utolsó szenzor, aminek a szimulációjával foglalkozunk a manapság egyre elterjedtebb RGBD kamera, ami a 3 csatornás színes kép mellett az adott képpont kamerától mért távolságát is megadja. Ilyen kamerák az XBox Kinect, Intel Realsense vagy a ZED kamerák.
 
 Az RGBD kamerák az utóbbi időben jelentősen elterjedtek, aminek a fő oka az áruk drasztikus csökkenése és a minőség javulása. Például egy Intel Realsense D435i kamera akár 1280 × 720 pixel felbontással ad mélységi képet, RGB képet pedig 1920 x 1080 pixel felbontással 30 FPS mellett. Továbbá rendelkezik beépített IMU-val és egy olyan lézer pötty projektorral, ami segít a távolságmérésben rossz fényviszonyok vagy textúra esetén.
 
@@ -930,7 +930,7 @@ Ha képfeldolgozás, akkor nem is kérdés, hogy OpenCV-t fogunk használni. Ter
 A ROS egy alap csomagjának segítségével, a [cv_bridge](http://wiki.ros.org/cv_bridge) segítségével könnyű átjárást biztosít a ROS és az OpenCV között. Könnyedén tudunk ROS üzenetből OpenCV image-et készíteni és az OpenCV image is könnyedén ROS üzenetté konvertálható.
 
 Én a kód elkészítése során OpenCV 3.2.0 verziót használtam, amit egyszerűen a Python csomagkezelőjével, a pip-pel tudtok telepíteni.
-Mivel a pip automatikusan a legfrissebb változatot fogja telepíteni, ami az adott Python verzióhoz elérhető, így ha egy konkrét verziót szeretnétek feltenni, használjátok a `pip install opencv-python==$VERSION` parancsot, ahol a $VERSION természetesen az a verzió, amit szeretnétek kiválasztani. Hogy milyen verziók érhetők el, az könnyen kilistázható a pip-pel:
+Mivel a pip automatikusan a legfrissebb változatot fogja telepíteni, ami az adott Python verzióhoz elérhető, így, ha egy konkrét verziót szeretnétek feltenni, használjátok a `pip install opencv-python==$VERSION` parancsot, ahol a $VERSION természetesen az a verzió, amit szeretnétek kiválasztani. Hogy milyen verziók érhetők el, az könnyen kilistázható a pip-pel:
 
 ```console
 david@DavidsLenovoX1:~/bme_catkin_ws$ pip install opencv-python==
@@ -939,7 +939,7 @@ Collecting opencv-python==
 No matching distribution found for opencv-python==
 ```
 
-Nyugodtan használjatok más verziót, mint én, különösen ha Python 3.x-et használtok Noetic-kel, van rá esély, hogy az eltérő OpenCV verzió miatt valami nem fog egyből futni a mellékelt kódban, de ilyenkor próbáljátok megtalálni és megoldani a hibát (változást), sokkal izgalmasabb, mint egyszerűen ugynazt a verziót telepíteni, mint ami nálam van.
+Nyugodtan használjatok más verziót, mint én, különösen ha Python 3.x-et használtok Noetic-kel, van rá esély, hogy az eltérő OpenCV verzió miatt valami nem fog egyből futni a mellékelt kódban, de ilyenkor próbáljátok megtalálni és megoldani a hibát (változást), sokkal izgalmasabb, mint egyszerűen ugyanazt a verziót telepíteni, mint ami nálam van.
 
 ## ROS node
 
@@ -1287,7 +1287,7 @@ Ha még nincs piros labdánk a meglévő modelljeink között, csináljunk egyet
 Mentsük el és utána már bármikor elérhető lesz az insert fül alatt.
 ![alt text][image29]
 
-Láthatjuk, hogy a node-unk színszűrése mostmár észre is veszi a labdát, megkeresi a kontúrját, valamint a kontúr centroidját, és a centroid alapján mozgatja a robotot, amíg a labda épp a kamerával szembe nem kerül.
+Láthatjuk, hogy a node-unk színszűrése most már észre is veszi a labdát, megkeresi a kontúrját, valamint a kontúr centroidját, és a centroid alapján mozgatja a robotot, amíg a labda épp a kamerával szembe nem kerül.
 
 ![alt text][image30]
 
