@@ -173,6 +173,8 @@ def queueMonocular(msg):
     else:
         qMono.put(cv2Img)
 
+print("OpenCV version: %s" % cv2.__version__)
+
 queueSize = 1      
 qMono = BufferQueue(queueSize)
 
