@@ -376,12 +376,14 @@ A Gazebo plugin használata pedig a következő:
       <updateRate>50.0</updateRate>
       <bodyName>imu_link</bodyName>
       <topicName>imu/data</topicName>
+      <accelOffset>0.0 0.0 0.0</accelOffset>
       <accelDrift>0.005 0.005 0.005</accelDrift>
       <accelGaussianNoise>0.005 0.005 0.005</accelGaussianNoise>
+      <rateOffset>0.0 0.0 0.0</rateOffset>
       <rateDrift>0.005 0.005 0.005 </rateDrift>
       <rateGaussianNoise>0.005 0.005 0.005 </rateGaussianNoise>
-      <headingDrift>0.005</headingDrift>
-      <headingGaussianNoise>0.005</headingGaussianNoise>
+      <yawDrift>0.005</yawDrift>
+      <yawGaussianNoise>0.005</yawGaussianNoise>
     </plugin>
   </gazebo>
 ```
