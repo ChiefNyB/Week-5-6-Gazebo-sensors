@@ -19,7 +19,7 @@
   <include file="$(find bme_gazebo_sensors)/launch/world.launch"/>
 
   <!-- Find mogi_bot description and send urdf to param server -->
-  <param name="robot_description" command="$(find xacro)/xacro.py $(arg model)" />
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
 
   <!-- Send joint values-->
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
