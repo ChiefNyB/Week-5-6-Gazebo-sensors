@@ -1145,6 +1145,12 @@ pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 rospy.spin()
 ```
 
+> **_Például OpenCV 4.2.0 esetén a `cv2.findContours` csak 2 visszatérési értékkel rendelkezik, így cseréljétek le a következő sort:_** 
+> ```python
+> # return value of findContours depends on OpenCV version
+> (contours,hierarchy) = cv2.findContours(redMask.copy(), 1, cv2.CHAIN_APPROX_NONE)
+> ```
+
 Nézzük a kódot! Importáljuk be a szükséges library-kat, ilyen az OpenCV (`cv2`) a `numpy` és a `cv_bridge`, valamint a szükséges ROS üzenettípusok.
 Egy speciális queue-t fogunk használni a kódban a képkockák tárolására és a `threading` segítségével egy több szálon futó kódot készítünk.
 
