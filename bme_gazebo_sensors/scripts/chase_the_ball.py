@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
@@ -76,7 +76,7 @@ class cvThread(threading.Thread):
         crosshairMask = stackedMask.copy()
 
         # return value of findContours depends on OpenCV version
-        (_, contours,hierarchy) = cv2.findContours(redMask.copy(), 1, cv2.CHAIN_APPROX_NONE)
+        (contours,hierarchy) = cv2.findContours(redMask.copy(), 1, cv2.CHAIN_APPROX_NONE)
 
         # Find the biggest contour (if detected)
         if len(contours) > 0:
