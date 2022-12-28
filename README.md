@@ -345,7 +345,7 @@ IMU szimulációra több Gazebo plugin is létezik, én az alábbi Hector IMU co
 
 A Linux csomagkezelőjével egyszerűen fel tudjátok tenni a Hector Gazebo pluginjeit:
 ```console
-sudo apt install ros-melodic-hector-gazebo-plugins
+sudo apt install ros-noetic-hector-gazebo-plugins
 ```
 
 Plusz olvasmánynak, egyéb IMU pluginekről és az összehasonlításukról szól ez a [diplomamunka](https://dspace.cvut.cz/bitstream/handle/10467/83404/F3-DP-2019-Cesenek-David-master_thesis_imu_modeling_cesenek_final-merged.pdf?sequence=-1&isAllowed=y) a prágai műszaki egyetemről.
@@ -398,13 +398,13 @@ roslaunch bme_gazebo_sensors spawn_robot.launch
 
 ### RViz
 Az IMU jelének megjelenítése egy csúnya nagy lila nyíl (ami egyébként a gyorsulásvektort mutatja), aminek a mérete nem is állítható. Ennek az az oka, hogy ez az egyik RViz plugin tutorial anyaga:  
-http://docs.ros.org/en/melodic/api/rviz_plugin_tutorials/html/display_plugin_tutorial.html
+http://docs.ros.org/en/noetic/api/rviz_plugin_tutorials/html/display_plugin_tutorial.html
 
 Ennél egy kicsit szebb megjelenítő az RViz IMU Plugin, aminek ez a ROS wiki oldala: http://wiki.ros.org/rviz_imu_plugin.
 
 A Linux csomagkezelőjével egyszerűen fel tudjátok tenni:
 ```console
-sudo apt install ros-melodic-rviz-imu-plugin
+sudo apt install ros-noetic-rviz-imu-plugin
 ```
 
 Ez egy jobban értelmezhető tengely jelölőt tesz a robotra az IMU jele alapján.
@@ -460,7 +460,7 @@ waypoints = [[47.47908802923231, 19.05774719012997],
 
 A `gps_waypoint_follower.py` tartalma:
 ```python
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import math
 import rospy
@@ -567,7 +567,7 @@ A képletben én a Föld sugarának az egyenlítői maximum 6378.137km-t haszná
 
 Le is tesztelhetjük a Haversine képlet számításunkat egy egyszerű kis példaprogrammal:
 ```python
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import math
 
@@ -772,7 +772,7 @@ A szimulációnkban használhatunk 3D lidart is, ilyen például a Velodyne VLP1
 
 A plugin használatához telepítsük fel a `Velodyne Gazebo Plugins` csomagot, aminek ugyan van [ROS wiki](http://wiki.ros.org/velodyne_gazebo_plugins)-je, de valójában a dokumentáció a fenti [bitbucket](https://bitbucket.org/DataspeedInc/velodyne_simulator/src/master/) linken érhető el.
 ```console
-sudo apt install ros-melodic-velodyne-gazebo-plugins
+sudo apt install ros-noetic-velodyne-gazebo-plugins
 ```
 
 ### URDF
@@ -965,24 +965,22 @@ Ha képfeldolgozás, akkor nem is kérdés, hogy OpenCV-t fogunk használni. Ter
 
 A ROS egy alap csomagjának segítségével, a [cv_bridge](http://wiki.ros.org/cv_bridge) segítségével könnyű átjárást biztosít a ROS és az OpenCV között. Könnyedén tudunk ROS üzenetből OpenCV image-et készíteni és az OpenCV image is könnyedén ROS üzenetté konvertálható.
 
-Én a kód elkészítése során OpenCV 3.2.0 verziót használtam, amit egyszerűen a Python csomagkezelőjével, a pip-pel tudtok telepíteni.
+Én a kód elkészítése során OpenCV 4.6.0 verziót használtam, amit egyszerűen a Python csomagkezelőjével, a pip-pel tudtok telepíteni.
 Mivel a pip automatikusan a legfrissebb változatot fogja telepíteni, ami az adott Python verzióhoz elérhető, így, ha egy konkrét verziót szeretnétek feltenni, használjátok a `pip install opencv-python==$VERSION` parancsot, ahol a $VERSION természetesen az a verzió, amit szeretnétek kiválasztani. Hogy milyen verziók érhetők el, az könnyen kilistázható a pip-pel:
 
 ```console
-david@DavidsLenovoX1:~/bme_catkin_ws$ pip install opencv-python==
-Collecting opencv-python==
-  Could not find a version that satisfies the requirement opencv-python== (from versions: 3.1.0.0, 3.1.0.1, 3.1.0.2, 3.1.0.3, 3.1.0.4, 3.1.0.5, 3.2.0.6, 3.2.0.7, 3.2.0.8, 3.3.0.9, 3.3.0.10, 3.3.1.11, 3.4.0.12, 3.4.0.14, 3.4.1.15, 3.4.2.16, 3.4.2.17, 3.4.3.18, 3.4.4.19, 3.4.5.20, 3.4.6.27, 3.4.7.28, 3.4.8.29, 3.4.9.31, 3.4.10.37, 4.0.0.21, 4.0.1.23, 4.0.1.24, 4.1.0.25, 4.1.1.26, 4.1.2.30, 4.2.0.32, 4.3.0.38)
-No matching distribution found for opencv-python==
-```
+david@david-precision-7520:~/bme_catkin_ws/src/Week-5-6-Gazebo-sensors/bme_gazebo_sensors/scripts$ pip install opencv-python==
+ERROR: Could not find a version that satisfies the requirement opencv-python== (from versions: 3.4.0.14, 3.4.8.29, 3.4.9.31, 3.4.9.33, 3.4.10.35, 3.4.10.37, 3.4.11.39, 3.4.11.41, 3.4.11.43, 3.4.11.45, 3.4.13.47, 3.4.14.51, 3.4.14.53, 3.4.15.55, 3.4.16.57, 3.4.16.59, 3.4.17.61, 3.4.17.63, 3.4.18.65, 4.1.2.30, 4.2.0.32, 4.2.0.34, 4.3.0.36, 4.3.0.38, 4.4.0.40, 4.4.0.42, 4.4.0.44, 4.4.0.46, 4.5.1.48, 4.5.2.52, 4.5.2.54, 4.5.3.56, 4.5.4.58, 4.5.4.60, 4.5.5.62, 4.5.5.64, 4.6.0.66)
+ERROR: No matching distribution found for opencv-python==
 
-Nyugodtan használjatok más verziót, mint én, különösen ha Python 3.x-et használtok Noetic-kel, van rá esély, hogy az eltérő OpenCV verzió miatt valami nem fog egyből futni a mellékelt kódban, de ilyenkor próbáljátok megtalálni és megoldani a hibát (változást), sokkal izgalmasabb, mint egyszerűen ugyanazt a verziót telepíteni, mint ami nálam van.
+```
 
 ## ROS node
 
 Ezúttal is egy Python node-ot fogunk készíteni az egyszerűség kedvéért. Az OpenCV és Numpy library-knak telepítve kell lenniük a Pythonotokhoz a kód használatához. Hozzuk létre a `chase_the_ball.py` fájlt a scripts mappában.
 
 ```python
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
@@ -1060,7 +1058,7 @@ class cvThread(threading.Thread):
         crosshairMask = stackedMask.copy()
 
         # return value of findContours depends on OpenCV version
-        (_, contours,hierarchy) = cv2.findContours(redMask.copy(), 1, cv2.CHAIN_APPROX_NONE)
+        (contours,hierarchy) = cv2.findContours(redMask.copy(), 1, cv2.CHAIN_APPROX_NONE)
 
         # Find the biggest contour (if detected)
         if len(contours) > 0:
@@ -1179,17 +1177,17 @@ pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 rospy.spin()
 ```
 
-> **_Például OpenCV 4.2.0 esetén a `cv2.findContours` csak 2 visszatérési értékkel rendelkezik, így cseréljétek le a következő sort:_** 
+> **_Például OpenCV 3.x.x esetén a `cv2.findContours` még 3 visszatérési értékkel rendelkezett, így ott le kellett cserélnünk a következő sort:_** 
 > ```python
 > # return value of findContours depends on OpenCV version
-> (contours,hierarchy) = cv2.findContours(redMask.copy(), 1, cv2.CHAIN_APPROX_NONE)
+> (_,contours,hierarchy) = cv2.findContours(redMask.copy(), 1, cv2.CHAIN_APPROX_NONE)
 > ```
 
 Nézzük a kódot! Importáljuk be a szükséges library-kat, ilyen az OpenCV (`cv2`) a `numpy` és a `cv_bridge`, valamint a szükséges ROS üzenettípusok.
 Egy speciális queue-t fogunk használni a kódban a képkockák tárolására és a `threading` segítségével egy több szálon futó kódot készítünk.
 
 ```python
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
